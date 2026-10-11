@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Agenda Docente Profesional - Dashboard para gestión académica integral" />
+  <title>Agenda Docente Profesional</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Firebase SDKs (Compat para simplicidad) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ============================================
+       VARIABLES Y RESET
+       ============================================ */
+    :root {
+      /* Paleta principal */
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-primary-light: #dbeafe;
+      --color-secondary: #64748b;
+      --color-accent: #f59e0b;
+      --color-success: #10b981;
+      --color-danger: #ef4444;
+      --color-warning: #f59e0b;
+
+      /* Superficies */
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-surface-elevated: #ffffff;
+      --color-border: #e2e8f0;
+      --color-border-light: #f1f5f9;
+
+      /* Texto */
+      --color-text: #0f172a;
+      --color-text-muted: #64748b;
+      --color-text-light: #94a3b8;
+
+      /* Sombras */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+      /* Radios */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+
+      /* Tipografía */
+      --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Montserrat', var(--font-primary);
+
+      /* Espaciado */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+
+      /* Layout */
+      --sidebar-width: 260px;
+      --header-height: 64px;
+
+      /* Transiciones */
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modo oscuro */
+    [data-theme="dark"] {
+      --color-bg: #0f172a;
+      --color-surface: #1e293b;
+      --color-surface-elevated: #273449;
+      --color-border: #334155;
+      --color-border-light: #1e293b;
+      --color-text: #f1f5f9;
+      --color-text-muted: #94a3b8;
+      --color-text-light: #64748b;
+      --color-primary-light: #1e3a8a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--color-text);
+      background: var(--color-bg);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+
+    input, textarea, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    a { color: var(--color-primary); text-decoration: none; }
+
+    /* ============================================
+       PANTALLA DE LOGIN
+       ============================================ */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+      z-index: 1000;
+      padding: var(--spacing-lg);
+    }
+
+    .login-screen.hidden { display: none; }
+
+    .login-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      padding: var(--spacing-2xl);
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-logo {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto var(--spacing-lg);
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+      color: var(--color-text);
+    }
+
+    .login-subtitle {
+      color: var(--color-text-muted);
+      margin-bottom: var(--spacing-xl);
+      font-size: 15px;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 15px;
+      color: var(--color-text);
+      transition: var(--transition-base);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .btn-google:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .btn-google img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .btn-local {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--color-primary);
+      color: white;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 15px;
+      transition: var(--transition-base);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+
+    .btn-local:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      margin: var(--spacing-lg) 0;
+      color: var(--color-text-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    .login-footer {
+      margin-top: var(--spacing-xl);
+      font-size: 12px;
+      color: var(--color-text-light);
+    }
+
+    /* ============================================
+       LAYOUT PRINCIPAL
+       ============================================ */
+    .app-container {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .app-container.active {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .sidebar-brand small {
+      display: block;
+      font-family: var(--font-primary);
+      font-weight: 400;
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .sidebar-nav::-webkit-scrollbar { width: 6px; }
+    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 3px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding: 10px var(--spacing-md);
+      border-radius: var(--radius-md);
+      color: var(--color-text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition-fast);
+      margin-bottom: 2px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: var(--color-border-light);
+      color: var(--color-text);
+    }
+
+    .nav-item.active {
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+    }
+
+    [data-theme="dark"] .nav-item.active {
+      background: rgba(37, 99, 235, 0.15);
+      color: #93c5fd;
+    }
+
+    .nav-item i {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: var(--spacing-md);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-md);
+      transition: var(--transition-fast);
+    }
+
+    .user-card:hover { background: var(--color-border-light); }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-accent), var(--color-warning));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: var(--header-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-xl);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .topbar-title i { color: var(--color-primary); }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      transition: var(--transition-fast);
+    }
+
+    .icon-btn:hover {
+      background: var(--color-border-light);
+      color: var(--color-text);
+    }
+
+    .content-area {
+      flex: 1;
+      padding: var(--spacing-xl);
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ============================================
+       SECCIONES / VISTAS
+       ============================================ */
+    .view {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .view.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .view-header {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .view-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .view-subtitle {
+      color: var(--color-text-muted);
+      font-size: 15px;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-base);
+    }
+
+    .card:hover { box-shadow: var(--shadow-md); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .card-title i { color: var(--color-primary); }
+
+    /* GRID LAYOUTS */
+    .grid {
+      display: grid;
+      gap: var(--spacing-lg);
+    }
+
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+    /* STATS */
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      transition: var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--stat-color, var(--color-primary));
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-change {
+      font-size: 12px;
+      color: var(--color-success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* BOTONES */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      font-size: 14px;
+      transition: var(--transition-base);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-border-light);
+      border-color: var(--color-text-light);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-border-light);
+      color: var(--color-text);
+    }
+
+    /* FORMULARIOS */
+    .form-group {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: var(--spacing-xs);
+      color: var(--color-text);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      transition: var(--transition-fast);
+      font-size: 14px;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-light);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      color: var(--color-text-muted);
+    }
+
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--spacing-md);
+      background: var(--color-border-light);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-light);
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* TOAST */
+    .toast-container {
+      position: fixed;
+      bottom: var(--spacing-lg);
+      right: var(--spacing-lg);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .toast {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md) var(--spacing-lg);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      min-width: 280px;
+      animation: slideInRight 0.3s ease;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .toast.success { border-left: 4px solid var(--color-success); }
+    .toast.error { border-left: 4px solid var(--color-danger); }
+    .toast.info { border-left: 4px solid var(--color-primary); }
+
+    .toast i { color: var(--color-success); flex-shrink: 0; }
+    .toast.error i { color: var(--color-danger); }
+    .toast.info i { color: var(--color-primary); }
+
+    /* LOADING */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+    }
+
+    .badge.success { background: #d1fae5; color: #065f46; }
+    .badge.warning { background: #fef3c7; color: #92400e; }
+    .badge.danger { background: #fee2e2; color: #991b1b; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .app-container.active {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 280px;
+        z-index: 100;
+        transition: var(--transition-base);
+      }
+      .sidebar.open { left: 0; box-shadow: var(--shadow-xl); }
+      .menu-toggle { display: flex !important; }
+    }
+
+    @media (max-width: 640px) {
+      .content-area { padding: var(--spacing-md); }
+      .view-title { font-size: 22px; }
+      .stat-value { font-size: 24px; }
+    }
+
+    .menu-toggle { display: none; }
+
+    /* Scrollbar global */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       PANTALLA DE LOGIN
+       ============================================ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">
+        <i data-lucide="graduation-cap" style="width:36px;height:36px;"></i>
+      </div>
+      <h1 class="login-title">Agenda Docente</h1>
+      <p class="login-subtitle">Tu espacio profesional para gestionar el año escolar con claridad y motivación</p>
+
+      <button class="btn-google" id="btnGoogleLogin">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+          <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/>
+          <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+          <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571c.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+        </svg>
+        Continuar con Google
+      </button>
+
+      <div class="login-divider">o</div>
+
+      <button class="btn-local" id="btnLocalLogin">
+        <i data-lucide="hard-drive" style="width:18px;height:18px;"></i>
+        Modo local (sin cuenta)
+      </button>
+
+      <p class="login-footer">
+        Tus datos se guardan de forma segura en la nube con Firebase 🔒
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================
+       APP PRINCIPAL
+       ============================================ -->
+  <div class="app-container" id="appContainer">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i data-lucide="graduation-cap" style="width:22px;height:22px;"></i>
+        </div>
+        <div class="sidebar-brand">
+          Agenda Docente
+          <small>Gestión académica</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <div class="nav-section-title">General</div>
+        <button class="nav-item active" data-view="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Inicio</span>
+        </button>
+        <button class="nav-item" data-view="institutions">
+          <i data-lucide="building-2"></i>
+          <span>Instituciones</span>
+        </button>
+        <button class="nav-item" data-view="subjects">
+          <i data-lucide="book-open"></i>
+          <span>Materias y Grupos</span>
+        </button>
+
+        <div class="nav-section-title">Planificación</div>
+        <button class="nav-item" data-view="calendar">
+          <i data-lucide="calendar-days"></i>
+          <span>Calendarios</span>
+        </button>
+        <button class="nav-item" data-view="planning">
+          <i data-lucide="clipboard-list"></i>
+          <span>Enseñanza y Planeación</span>
+        </button>
+        <button class="nav-item" data-view="subject-details">
+          <i data-lucide="file-text"></i>
+          <span>Detalles de Materia</span>
+        </button>
+
+        <div class="nav-section-title">Alumnado</div>
+        <button class="nav-item" data-view="students">
+          <i data-lucide="users"></i>
+          <span>Alumnado</span>
+        </button>
+        <button class="nav-item" data-view="classes">
+          <i data-lucide="school"></i>
+          <span>Mis Clases</span>
+        </button>
+        <button class="nav-item" data-view="evaluation">
+          <i data-lucide="award"></i>
+          <span>Evaluación</span>
+        </button>
+
+        <div class="nav-section-title">Comunidad</div>
+        <button class="nav-item" data-view="families">
+          <i data-lucide="home"></i>
+          <span>Familias</span>
+        </button>
+        <button class="nav-item" data-view="staff">
+          <i data-lucide="user-check"></i>
+          <span>Personal y Reuniones</span>
+        </button>
+
+        <div class="nav-section-title">Personal</div>
+        <button class="nav-item" data-view="wellbeing">
+          <i data-lucide="heart"></i>
+          <span>Bienestar Docente</span>
+        </button>
+        <button class="nav-item" data-view="training">
+          <i data-lucide="trophy"></i>
+          <span>Formación y Carrera</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Configuración</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card" id="userCard">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-info">
+            <div class="user-name" id="userName">Cargando...</div>
+            <div class="user-email" id="userEmail">...</div>
+          </div>
+          <button class="icon-btn" id="btnLogout" title="Cerrar sesión">
+            <i data-lucide="log-out" style="width:16px;height:16px;"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:var(--spacing-md);">
+          <button class="icon-btn menu-toggle" id="menuToggle">
+            <i data-lucide="menu"></i>
+          </button>
+          <h1 class="topbar-title" id="topbarTitle">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Inicio</span>
+          </h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="btnTheme" title="Cambiar tema">
+            <i data-lucide="moon"></i>
+          </button>
+          <button class="icon-btn" id="btnExport" title="Exportar PDF">
+            <i data-lucide="download"></i>
+          </button>
+          <button class="icon-btn" title="Notificaciones">
+            <i data-lucide="bell"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-area">
+
+        <!-- ============ DASHBOARD ============ -->
+        <section class="view active" id="view-dashboard">
+          <div class="view-header">
+            <h2 class="view-title">¡Buen día, <span id="greetingName">docente</span>! 👋</h2>
+            <p class="view-subtitle" id="greetingDate">Cargando fecha...</p>
+          </div>
+
+          <div class="grid grid-4" style="margin-bottom:var(--spacing-xl);">
+            <div class="stat-card" style="--stat-color: var(--color-primary);">
+              <div class="stat-label">Instituciones</div>
+              <div class="stat-value" id="statInstitutions">0</div>
+              <div class="stat-change">Activas este ciclo</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-accent);">
+              <div class="stat-label">Materias</div>
+              <div class="stat-value" id="statSubjects">0</div>
+              <div class="stat-change">Asignadas</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-success);">
+              <div class="stat-label">Alumnos</div>
+              <div class="stat-value" id="statStudents">0</div>
+              <div class="stat-change">En total</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-warning);">
+              <div class="stat-label">Eventos hoy</div>
+              <div class="stat-value" id="statEvents">0</div>
+              <div class="stat-change">Próximos</div>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="calendar-check"></i>
+                  Próximos eventos
+                </h3>
+                <button class="btn btn-ghost" data-view="calendar">Ver todos</button>
+              </div>
+              <div id="upcomingEvents">
+                <div class="empty-state">
+                  <div class="empty-state-icon"><i data-lucide="calendar"></i></div>
+                  <p class="empty-state-title">Sin eventos próximos</p>
+                  <p class="empty-state-text">Aún no has creado ningún evento</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="zap"></i>
+                  Accesos rápidos
+                </h3>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--spacing-sm);">
+                <button class="btn btn-secondary" data-view="institutions">
+                  <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+                  Nueva institución
+                </button>
+                <button class="btn btn-secondary" data-view="subjects">
+                  <i data-lucide="book-plus" style="width:16px;height:16px;"></i>
+                  Nueva materia
+                </button>
+                <button class="btn btn-secondary" data-view="students">
+                  <i data-lucide="user-plus" style="width:16px;height:16px;"></i>
+                  Nuevo alumno
+                </button>
+                <button class="btn btn-secondary" data-view="calendar">
+                  <i data-lucide="calendar-plus" style="width:16px;height:16px;"></i>
+                  Nuevo evento
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="target"></i>
+                  Clases de hoy
+                </h3>
+              </div>
+              <div class="empty-state">
+                <div class="empty-state-icon"><i data-lucide="school"></i></div>
+                <p class="empty-state-title">Configura tu horario</p>
+                <p class="empty-state-text">Ve a Instituciones para configurar tu semana</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="trending-up"></i>
+                  Progreso del ciclo
+                </h3>
+              </div>
+              <div style="padding:var(--spacing-md) 0;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:var(--spacing-sm);">
+                  <span style="font-size:13px;color:var(--color-text-muted);">Avance general</span>
+                  <span style="font-size:13px;font-weight:600;">42%</span>
+                </div>
+                <div style="height:8px;background:var(--color-border-light);border-radius:999px;overflow:hidden;">
+                  <div style="height:100%;width:42%;background:linear-gradient(90deg,var(--color-primary),var(--color-accent));border-radius:999px;"></div>
+                </div>
+                <p style="font-size:12px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">
+                  💪 ¡Vas por buen camino! Sigue así.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ INSTITUCIONES ============ -->
+        <section class="view" id="view-institutions">
+          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
+            <div>
+              <h2 class="view-title">Instituciones Académicas</h2>
+              <p class="view-subtitle">Gestiona tus centros educativos, ciclos y horarios</p>
+            </div>
+            <button class="btn btn-primary" id="btnNewInstitution">
+              <i data-lucide="plus" style="width:16px;height:16px;"></i>
+              Nueva institución
+            </button>
+          </div>
+          <div id="institutionsList">
+            <div class="empty-state">
+              <div class="empty-state-icon"><i data-lucide="building-2"></i></div>
+              <p class="empty-state-title">Aún no tienes instituciones</p>
+              <p class="empty-state-text">Comienza creando tu primera institución académica</p>
+              <button class="btn btn-primary" id="btnNewInstitutionEmpty">
+                <i data-lucide="plus" style="width:16px;height:16px;"></i>
+                Crear institución
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MATERIAS ============ -->
+        <section class="view" id="view-subjects">
+          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
+            <div>
+              <h2 class="view-title">Materias y Grupos</h2>
+              <p class="view-subtitle">Organiza tus asignaturas con colores personalizados</p>
+            </div>
+            <button class="btn btn-primary" id="btnNewSubject">
+              <i data-lucide="plus" style="width:16px;height:16px;"></i>
+              Nueva materia
+            </button>
+          </div>
+          <div id="subjectsList">
+            <div class="empty-state">
+              <div class="empty-state-icon"><i data-lucide="book-open"></i></div>
+              <p class="empty-state-title">Sin materias registradas</p>
+              <p class="empty-state-text">Crea tu primera materia y asígnale un color</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CALENDARIO ============ -->
+        <section class="view" id="view-calendar">
+          <div class="view-header">
+            <h2 class="view-title">Calendarios Enlazados</h2>
+            <p class="view-subtitle">Vista anual, mensual y semanal sincronizadas automáticamente</p>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div style="display:flex;gap:var(--spacing-sm);">
+                <button class="btn btn-secondary active" data-calview="annual">Anual</button>
+                <button class="btn btn-ghost" data-calview="monthly">Mensual</button>
+                <button class="btn btn-ghost" data-calview="weekly">Semanal</button>
+              </div>
+              <button class="btn btn-primary">
+                <i data-lucide="plus" style="width:16px;height:16px;"></i>
+                Nuevo evento
+              </button>
+            </div>
+            <div class="empty-state">
+              <div class="empty-state-icon"><i data-lucide="calendar-days"></i></div>
+              <p class="empty-state-title">Calendario listo para usar</p>
+              <p class="empty-state-text">Los eventos creados aquí aparecerán en todas las vistas</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PLANEACIÓN ============ -->
+        <section class="view" id="view-planning">
+          <div class="view-header">
+            <h2 class="view-title">Enseñanza y Planeación</h2>
+            <p class="view-subtitle">Programación anual, unidades didácticas y planeación semanal</p>
+          </div>
+          <div class="grid grid-3">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="calendar-range"></i> Programación anual
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Planifica el año por materia y grupo
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Configurar</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="layers"></i> Unidades didácticas
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Hasta 6 unidades por materia
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Gestionar</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="calendar-clock"></i> Planeación semanal
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Avance semana a semana
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Planificar</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="file-edit"></i> Bitácora diaria
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Registro por día de clase
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Registrar</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="clipboard-check"></i> Evaluaciones programadas
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Fechas, grupos y contenidos
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Programar</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-md);">
+                <i data-lucide="map-pin"></i> Salidas y excursiones
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Planifica actividades externas
+              </p>
+              <button class="btn btn-secondary" style="width:100%;">Organizar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ DETALLES DE MATERIA ============ -->
+        <section class="view" id="view-subject-details">
+          <div class="view-header">
+            <h2 class="view-title">Detalles de Materia</h2>
+            <p class="view-subtitle">Temario, planeación, alumnos, rúbrica y calificaciones</p>
+          </div>
+          <div class="grid grid-3">
+            <div class="card"><div class="card-title"><i data-lucide="list-ordered"></i> Temario</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Contenidos del curso</p></div>
+            <div class="card"><div class="card-title"><i data-lucide="calendar-range"></i> Planeación semestral</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Distribución por semana</p></div>
+            <div class="card"><div class="card-title"><i data-lucide="users"></i> Gestión de alumnos</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Asistencia, tareas, participación</p></div>
+            <div class="card"><div class="card-title"><i data-lucide="scale"></i> Rúbrica de evaluación</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Criterios y niveles</p></div>
+            <div class="card"><div class="card-title"><i data-lucide="table"></i> Registro de calificaciones</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Tabla tipo Excel</p></div>
+            <div class="card"><div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Participación, autonomía, convivencia</p></div>
+          </div>
+        </section>
+
+        <!-- ============ ALUMNADO ============ -->
+        <section class="view" id="view-students">
+          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
+            <div>
+              <h2 class="view-title">Alumnado</h2>
+              <p class="view-subtitle">Fichas completas, NEAE y planes de apoyo</p>
+            </div>
+            <button class="btn btn-primary">
+              <i data-lucide="user-plus" style="width:16px;height:16px;"></i>
+              Nuevo alumno
+            </button>
+          </div>
+          <div class="grid grid-4" style="margin-bottom:var(--spacing-xl);">
+            <div class="stat-card" style="--stat-color: var(--color-primary);">
+              <div class="stat-label">Total alumnos</div>
+              <div class="stat-value">0</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-warning);">
+              <div class="stat-label">Con NEAE</div>
+              <div class="stat-value">0</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-success);">
+              <div class="stat-label">Cumpleaños este mes</div>
+              <div class="stat-value">0</div>
+            </div>
+            <div class="stat-card" style="--stat-color: var(--color-accent);">
+              <div class="stat-label">Incidencias</div>
+              <div class="stat-value">0</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="empty-state">
+              <div class="empty-state-icon"><i data-lucide="users"></i></div>
+              <p class="empty-state-title">Aún no hay alumnos registrados</p>
+              <p class="empty-state-text">Hasta 180 fichas con datos completos, NEAE y contactos familiares</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MIS CLASES ============ -->
+        <section class="view" id="view-classes">
+          <div class="view-header">
+            <h2 class="view-title">Panel de Mis Clases</h2>
+            <p class="view-subtitle">Hasta 12 grupos con lista, plano de aula y notas</p>
+          </div>
+          <div class="card">
+            <div class="empty-state">
+              <div class="empty-state-icon"><i data-lucide="school"></i></div>
+              <p class="empty-state-title">Sin grupos asignados</p>
+              <p class="empty-state-text">Crea materias para ver tus grupos aquí</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ EVALUACIÓN ============ -->
+        <section class="view" id="view-evaluation">
+          <div class="view-header">
+            <h2 class="view-title">Evaluación y Registros</h2>
+            <p class="view-subtitle">Calificaciones, conducta y juntas de evaluación</p>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="award"></i> Registro de calificaciones</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Por grupo y periodo</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Descriptores por alumno</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="calendar-check"></i> Periodos de evaluación</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">3 periodos configurables</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="users-round"></i> Juntas de evaluación</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Actas y acuerdos</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ FAMILIAS ============ -->
+        <section class="view" id="view-families">
+          <div class="view-header">
+            <h2 class="view-title">Familias</h2>
+            <p class="view-subtitle">Comunicación, reuniones y fichas de contacto</p>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="message-circle"></i> Comunicación con familias</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Registro de contactos</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="calendar-clock"></i> Reuniones concertadas</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Horario de atención</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PERSONAL ============ -->
+        <section class="view" id="view-staff">
+          <div class="view-header">
+            <h2 class="view-title">Personal y Reuniones</h2>
+            <p class="view-subtitle">Claustros, departamentos y contactos del centro</p>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="users"></i> Reuniones de personal</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Claustro y departamentos</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="contact"></i> Contactos del centro</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Dirección y colegas</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ BIENESTAR ============ -->
+        <section class="view" id="view-wellbeing">
+          <div class="view-header">
+            <h2 class="view-title">Bienestar Docente 🧘</h2>
+            <p class="view-subtitle">Cuida de ti para cuidar mejor a tus alumnos</p>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="activity"></i> Registro semanal</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Energía, carga, ánimo, sueño</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="sparkles"></i> Reflexiones docentes</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Espacio libre para pensar</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="target"></i> Objetivos del año</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Incluye bienestar personal</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="heart-handshake"></i> Lo que me sostiene</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Y los límites que quiero mantener</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ FORMACIÓN ============ -->
+        <section class="view" id="view-training">
+          <div class="view-header">
+            <h2 class="view-title">Formación y Carrera</h2>
+            <p class="view-subtitle">Desarrollo profesional continuo</p>
+          </div>
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="graduation-cap"></i> Registro de formación</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Cursos y certificaciones</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="trending-up"></i> Objetivos profesionales</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Plan de desarrollo</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CONFIGURACIÓN ============ -->
+        <section class="view" id="view-settings">
+          <div class="view-header">
+            <h2 class="view-title">Configuración</h2>
+            <p class="view-subtitle">Personaliza tu experiencia y gestiona tus datos</p>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-lg);">
+                <i data-lucide="palette"></i> Personalización visual
+              </div>
+              <div class="form-group">
+                <label class="form-label">Color primario</label>
+                <input type="color" class="form-input" id="colorPrimary" value="#2563eb" style="height:44px;padding:4px;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Color secundario</label>
+                <input type="color" class="form-input" id="colorSecondary" value="#64748b" style="height:44px;padding:4px;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipografía</label>
+                <select class="form-select" id="fontSelect">
+                  <option value="Inter">Inter</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-lg);">
+                <i data-lucide="database"></i> Datos
+              </div>
+              <div style="display:flex;flex-direction:column;gap:var(--spacing-sm);">
+                <button class="btn btn-secondary">
+                  <i data-lucide="download" style="width:16px;height:16px;"></i>
+                  Exportar datos (JSON)
+                </button>
+                <button class="btn btn-secondary">
+                  <i data-lucide="upload" style="width:16px;height:16px;"></i>
+                  Importar datos
+                </button>
+                <button class="btn btn-secondary">
+                  <i data-lucide="file-down" style="width:16px;height:16px;"></i>
+                  Exportar sección a PDF
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-lg);">
+                <i data-lucide="calendar-sync"></i> Google Calendar
+              </div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                Sincroniza eventos con tu cuenta de Google
+              </p>
+              <button class="btn btn-secondary">
+                <i data-lucide="link" style="width:16px;height:16px;"></i>
+                Conectar Google Calendar
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:var(--spacing-lg);">
+                <i data-lucide="user"></i> Cuenta
+              </div>
+              <div style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
+                <div style="margin-bottom:var(--spacing-xs);"><strong>Sesión:</strong> <span id="settingsEmail">-</span></div>
+                <div><strong>Proveedor:</strong> <span id="settingsProvider">-</span></div>
+              </div>
+              <button class="btn btn-secondary" id="btnLogoutSettings">
+                <i data-lucide="log-out" style="width:16px;height:16px;"></i>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ============================================
+       JAVASCRIPT
+       ============================================ -->
+  <script>
+    /* ============================================
+       CONFIGURACIÓN FIREBASE
+       ⚠️ REEMPLAZA ESTOS VALORES CON TUS CREDENCIALES
+       ============================================ */
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY_AQUI",
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_PROYECTO.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    /* ============================================
+       ESTADO GLOBAL
+       ============================================ */
+    const state = {
+      user: null,
+      isLocalMode: false,
+      currentView: 'dashboard',
+      theme: localStorage.getItem('theme') || 'light',
+      data: {
+        institutions: [],
+        subjects: [],
+        students: [],
+        events: [],
+        settings: {}
+      }
+    };
+
+    /* ============================================
+       UTILIDADES
+       ============================================ */
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    function showToast(message, type = 'info') {
+      const container = $('#toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const iconMap = {
+        success: 'check-circle',
+        error: 'alert-circle',
+        info: 'info'
+      };
+      toast.innerHTML = `
+        <i data-lucide="${iconMap[type]}"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function formatDate(date) {
+      return new Intl.DateTimeFormat('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date);
+    }
+
+    function getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Buenos días';
+      if (hour < 19) return 'Buenas tardes';
+      return 'Buenas noches';
+    }
+
+    /* ============================================
+       AUTENTICACIÓN
+       ============================================ */
+    async function loginWithGoogle() {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+        const result = await auth.signInWithPopup(provider);
+        state.user = result.user;
+        state.isLocalMode = false;
+        onAuthSuccess();
+      } catch (error) {
+        console.error('Error login:', error);
+        showToast('Error al iniciar sesión: ' + error.message, 'error');
+      }
+    }
+
+    function loginLocal() {
+      // Modo local: usuario anónimo persistente
+      const localId = localStorage.getItem('localUserId') || 'local_' + Date.now();
+      localStorage.setItem('localUserId', localId);
+      state.user = {
+        uid: localId,
+        displayName: 'Modo Local',
+        email: 'local@agenda-docente.app',
+        photoURL: null,
+        isAnonymous: true
+      };
+      state.isLocalMode = true;
+      onAuthSuccess();
+      showToast('Sesión local iniciada', 'success');
+    }
+
+    async function logout() {
+      try {
+        if (!state.isLocalMode) {
+          await auth.signOut();
+        }
+        state.user = null;
+        $('#loginScreen').classList.remove('hidden');
+        $('#appContainer').classList.remove('active');
+        showToast('Sesión cerrada', 'info');
+      } catch (error) {
+        console.error('Error logout:', error);
+      }
+    }
+
+    function onAuthSuccess() {
+      $('#loginScreen').classList.add('hidden');
+      $('#appContainer').classList.add('active');
+      updateUserUI();
+      loadUserData();
+      showToast(`¡Bienvenido, ${state.user.displayName || 'docente'}!`, 'success');
+    }
+
+    function updateUserUI() {
+      const user = state.user;
+      const name = user.displayName || 'Docente';
+      const email = user.email || 'Modo local';
+      const initial = name.charAt(0).toUpperCase();
+
+      $('#userName').textContent = name;
+      $('#userEmail').textContent = email;
+      $('#settingsEmail').textContent = email;
+      $('#settingsProvider').textContent = state.isLocalMode ? 'Local' : 'Google';
+      $('#greetingName').textContent = name.split(' ')[0];
+      $('#greetingDate').textContent = `${getGreeting()} · ${formatDate(new Date())}`;
+
+      const avatar = $('#userAvatar');
+      if (user.photoURL) {
+        avatar.innerHTML = `<img src="${user.photoURL}" alt="${name}">`;
+      } else {
+        avatar.textContent = initial;
+      }
+    }
+
+    /* ============================================
+       FIRESTORE - CARGA Y GUARDADO
+       ============================================ */
+    async function loadUserData() {
+      try {
+        if (state.isLocalMode) {
+          // Modo local: usar localStorage
+          const saved = localStorage.getItem('agendaData_' + state.user.uid);
+          if (saved) {
+            state.data = JSON.parse(saved);
+          }
+          updateDashboardStats();
+          return;
+        }
+
+        // Firebase: cargar datos del usuario
+        const userDoc = await db.collection('users').doc(state.user.uid).get();
+        if (userDoc.exists) {
+          state.data = userDoc.data();
+        } else {
+          // Crear documento inicial
+          state.data = {
+            profile: {
+              displayName: state.user.displayName,
+              email: state.user.email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            },
+            institutions: [],
+            subjects: [],
+            students: [],
+            events: [],
+            settings: { theme: 'light', primaryColor: '#2563eb' },
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await db.collection('users').doc(state.user.uid).set(state.data);
+        }
+        updateDashboardStats();
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        showToast('Error al cargar datos: ' + error.message, 'error');
+      }
+    }
+
+    async function saveUserData() {
+      try {
+        if (state.isLocalMode) {
+          localStorage.setItem('agendaData_' + state.user.uid, JSON.stringify(state.data));
+          return;
+        }
+        await db.collection('users').doc(state.user.uid).update({
+          ...state.data,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (error) {
+        console.error('Error guardando:', error);
+        showToast('Error al guardar: ' + error.message, 'error');
+      }
+    }
+
+    // Autoguardado con debounce
+    let saveTimeout;
+    function autoSave() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveUserData();
+      }, 800);
+    }
+
+    /* ============================================
+       NAVEGACIÓN
+       ============================================ */
+    function navigateTo(viewName) {
+      // Ocultar todas las vistas
+      $$('.view').forEach(v => v.classList.remove('active'));
+      $$('.nav-item').forEach(n => n.classList.remove('active'));
+
+      // Mostrar la vista solicitada
+      const view = $(`#view-${viewName}`);
+      const navItem = $(`.nav-item[data-view="${viewName}"]`);
+      if (view) view.classList.add('active');
+      if (navItem) navItem.classList.add('active');
+
+      // Actualizar título del topbar
+      const titles = {
+        'dashboard': { icon: 'layout-dashboard', text: 'Inicio' },
+        'institutions': { icon: 'building-2', text: 'Instituciones' },
+        'subjects': { icon: 'book-open', text: 'Materias y Grupos' },
+        'calendar': { icon: 'calendar-days', text: 'Calendarios' },
+        'planning': { icon: 'clipboard-list', text: 'Enseñanza y Planeación' },
+        'subject-details': { icon: 'file-text', text: 'Detalles de Materia' },
+        'students': { icon: 'users', text: 'Alumnado' },
+        'classes': { icon: 'school', text: 'Mis Clases' },
+        'evaluation': { icon: 'award', text: 'Evaluación' },
+        'families': { icon: 'home', text: 'Familias' },
+        'staff': { icon: 'user-check', text: 'Personal y Reuniones' },
+        'wellbeing': { icon: 'heart', text: 'Bienestar Docente' },
+        'training': { icon: 'trophy', text: 'Formación y Carrera' },
+        'settings': { icon: 'settings', text: 'Configuración' }
+      };
+
+      const t = titles[viewName] || { icon: 'layout-dashboard', text: viewName };
+      $('#topbarTitle').innerHTML = `<i data-lucide="${t.icon}"></i><span>${t.text}</span>`;
+      lucide.createIcons();
+
+      state.currentView = viewName;
+
+      // Cerrar sidebar en móvil
+      $('#sidebar').classList.remove('open');
+    }
+
+    /* ============================================
+       DASHBOARD - ESTADÍSTICAS
+       ============================================ */
+    function updateDashboardStats() {
+      $('#statInstitutions').textContent = state.data.institutions?.length || 0;
+      $('#statSubjects').textContent = state.data.subjects?.length || 0;
+      $('#statStudents').textContent = state.data.students?.length || 0;
+      $('#statEvents').textContent = state.data.events?.length || 0;
+    }
+
+    /* ============================================
+       TEMA
+       ============================================ */
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      state.theme = theme;
+      localStorage.setItem('theme', theme);
+      const icon = theme === 'dark' ? 'sun' : 'moon';
+      $('#btnTheme').innerHTML = `<i data-lucide="${icon}"></i>`;
+      lucide.createIcons();
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === 'light' ? 'dark' : 'light');
+    }
+
+    /* ============================================
+       EVENT LISTENERS
+       ============================================ */
+    function initEventListeners() {
+      // Login
+      $('#btnGoogleLogin').addEventListener('click', loginWithGoogle);
+      $('#btnLocalLogin').addEventListener('click', loginLocal);
+
+      // Logout
+      $('#btnLogout').addEventListener('click', logout);
+      $('#btnLogoutSettings').addEventListener('click', logout);
+
+      // Navegación
+      $$('.nav-item, [data-view]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const view = el.getAttribute('data-view');
+          if (view) navigateTo(view);
+        });
+      });
+
+      // Tema
+      $('#btnTheme').addEventListener('click', toggleTheme);
+
+      // Menú móvil
+      $('#menuToggle').addEventListener('click', () => {
+        $('#sidebar').classList.toggle('open');
+      });
+
+      // Nuevas instituciones / materias
+      $('#btnNewInstitution')?.addEventListener('click', () => {
+        showToast('Funcionalidad disponible en Fase 2', 'info');
+      });
+      $('#btnNewInstitutionEmpty')?.addEventListener('click', () => {
+        showToast('Funcionalidad disponible en Fase 2', 'info');
+      });
+      $('#btnNewSubject')?.addEventListener('click', () => {
+        showToast('Funcionalidad disponible en Fase 2', 'info');
+      });
+
+      // Export
+      $('#btnExport')?.addEventListener('click', () => {
+        showToast('Exportación PDF disponible en Fase 4', 'info');
+      });
+
+      // Configuración de colores
+      $('#colorPrimary')?.addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--color-primary', e.target.value);
+      });
+      $('#colorSecondary')?.addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--color-secondary', e.target.value);
+      });
+      $('#fontSelect')?.addEventListener('change', (e) => {
+        document.documentElement.style.setProperty('--font-primary', `'${e.target.value}', sans-serif`);
+      });
+    }
+
+    /* ============================================
+       INICIALIZACIÓN
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Renderizar iconos
+      lucide.createIcons();
+
+      // Aplicar tema guardado
+      applyTheme(state.theme);
+
+      // Event listeners
+      initEventListeners();
+
+      // Listener de autenticación
+      auth.onAuthStateChanged((user) => {
+        if (user && !state.isLocalMode) {
+          state.user = user;
+          onAuthSuccess();
+        }
+      });
+
+      console.log('🎓 Agenda Docente Profesional - Fase 1 cargada');
+      console.log('⚠️ Configura firebaseConfig con tus credenciales para activar la nube');
+    });
+  </script>
+</body>
+        </html>
