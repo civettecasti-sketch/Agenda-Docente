@@ -11,6 +11,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
     :root {
@@ -80,9 +82,7 @@
       background-attachment: fixed;
     }
     body.has-bg-image .app-container,
-    body.has-bg-image .login-screen {
-      background: transparent;
-    }
+    body.has-bg-image .login-screen { background: transparent; }
     body.has-bg-image .card,
     body.has-bg-image .stat-card,
     body.has-bg-image .institution-card,
@@ -147,22 +147,6 @@
       margin-bottom: var(--spacing-md);
     }
     .btn-google:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-    .btn-local {
-      width: 100%; padding: 14px 20px;
-      background: var(--color-primary); color: white;
-      border-radius: var(--radius-md);
-      font-weight: 500; font-size: 15px;
-      transition: var(--transition-base);
-      display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
-    }
-    .btn-local:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
-    .login-divider {
-      display: flex; align-items: center; gap: var(--spacing-md);
-      margin: var(--spacing-lg) 0;
-      color: var(--color-text-light); font-size: 12px;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
     .login-footer { margin-top: var(--spacing-xl); font-size: 12px; color: var(--color-text-light); }
 
     /* LAYOUT */
@@ -305,6 +289,8 @@
     .btn-ghost:hover { background: var(--color-border-light); color: var(--color-text); }
     .btn-danger { background: var(--color-danger); color: white; }
     .btn-danger:hover { background: #dc2626; }
+    .btn-success { background: var(--color-success); color: white; }
+    .btn-success:hover { background: #059669; }
     .btn-sm { padding: 6px 12px; font-size: 13px; }
 
     /* FORMULARIOS */
@@ -323,6 +309,7 @@
     }
     .form-textarea { min-height: 80px; resize: vertical; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--spacing-md); }
 
     /* EMPTY STATE */
     .empty-state { text-align: center; padding: var(--spacing-2xl) var(--spacing-lg); color: var(--color-text-muted); }
@@ -364,10 +351,11 @@
       background: var(--color-surface);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-xl);
-      max-width: 600px; width: 100%;
+      max-width: 700px; width: 100%;
       max-height: 90vh; overflow-y: auto;
       animation: slideUp 0.3s ease;
     }
+    .modal-large { max-width: 900px; }
     .modal-header {
       padding: var(--spacing-lg);
       border-bottom: 1px solid var(--color-border);
@@ -380,6 +368,48 @@
       border-top: 1px solid var(--color-border);
       display: flex; justify-content: flex-end; gap: var(--spacing-sm);
     }
+
+    /* TABS */
+    .tabs {
+      display: flex; gap: var(--spacing-xs);
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: var(--spacing-lg);
+    }
+    .tab {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-size: 13px; font-weight: 500;
+      color: var(--color-text-muted);
+      cursor: pointer; transition: var(--transition-fast);
+    }
+    .tab:hover { background: var(--color-border-light); }
+    .tab.active {
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* TABLA */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th, .data-table td {
+      padding: var(--spacing-sm) var(--spacing-md);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .data-table th {
+      background: var(--color-border-light);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .data-table tr:hover { background: var(--color-border-light); }
 
     /* INSTITUCIÓN CARD */
     .institution-card {
@@ -411,6 +441,8 @@
       background: var(--color-primary-light); color: var(--color-primary-dark);
     }
     .badge.active { background: #d1fae5; color: #065f46; }
+    .badge.warning { background: #fef3c7; color: #92400e; }
+    .badge.danger { background: #fee2e2; color: #991b1b; }
 
     /* MATERIA CARD */
     .subject-card {
@@ -442,7 +474,6 @@
       margin-bottom: var(--spacing-lg);
     }
     .calendar-nav-title { font-size: 20px; font-weight: 700; font-family: var(--font-display); }
-    .calendar-nav-buttons { display: flex; gap: var(--spacing-sm); }
     .calendar-annual {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -590,6 +621,58 @@
     }
     .toggle.active::after { left: 22px; }
 
+    /* CHECKBOX */
+    .checkbox-container {
+      display: flex; align-items: center; gap: var(--spacing-sm);
+      cursor: pointer;
+    }
+    .checkbox {
+      width: 18px; height: 18px;
+      border: 2px solid var(--color-border);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition-fast);
+    }
+    .checkbox.checked {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .checkbox.checked::after {
+      content: '✓'; color: white; font-size: 12px; font-weight: bold;
+    }
+
+    /* PLANO AULA */
+    .classroom-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+    }
+    .classroom-desk {
+      aspect-ratio: 1;
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500;
+      cursor: pointer; transition: var(--transition-fast);
+      padding: var(--spacing-xs);
+      text-align: center;
+    }
+    .classroom-desk:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+    .classroom-desk.occupied { background: var(--color-primary-light); border-color: var(--color-primary); }
+    .classroom-desk.neae { background: #fef3c7; border-color: var(--color-warning); }
+    .classroom-board {
+      grid-column: 1 / -1;
+      background: var(--color-border);
+      padding: var(--spacing-sm);
+      text-align: center;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-md);
+    }
+
     /* RESPONSIVE */
     @media (max-width: 1024px) {
       .app-container.active { grid-template-columns: 1fr; }
@@ -601,7 +684,7 @@
       .content-area { padding: var(--spacing-md); }
       .view-title { font-size: 22px; }
       .stat-value { font-size: 24px; }
-      .form-row { grid-template-columns: 1fr; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
     }
     .menu-toggle { display: none; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -610,7 +693,7 @@
 </head>
 <body>
 
-  <!-- LOGIN -->
+  <!-- LOGIN (Solo Google) -->
   <div class="login-screen" id="loginScreen">
     <div class="login-card">
       <div class="login-logo"><i data-lucide="graduation-cap" style="width:36px;height:36px;"></i></div>
@@ -620,12 +703,7 @@
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
         Continuar con Google
       </button>
-      <div class="login-divider">o</div>
-      <button class="btn-local" id="btnLocalLogin">
-        <i data-lucide="hard-drive" style="width:18px;height:18px;"></i>
-        Modo local (sin cuenta)
-      </button>
-      <p class="login-footer">Tus datos se guardan de forma segura 🔒</p>
+      <p class="login-footer">Tus datos se guardan de forma segura en la nube 🔒</p>
     </div>
   </div>
 
@@ -729,7 +807,7 @@
               <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--spacing-sm);">
                 <button class="btn btn-secondary" onclick="openInstitutionModal()"><i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Nueva institución</button>
                 <button class="btn btn-secondary" onclick="openSubjectModal()"><i data-lucide="book-plus" style="width:16px;height:16px;"></i>Nueva materia</button>
-                <button class="btn btn-secondary" data-view="students"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
+                <button class="btn btn-secondary" onclick="openStudentModal()"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
                 <button class="btn btn-secondary" onclick="openEventModal()"><i data-lucide="calendar-plus" style="width:16px;height:16px;"></i>Nuevo evento</button>
               </div>
             </div>
@@ -832,38 +910,60 @@
           </div>
         </section>
 
+        <!-- ALUMNADO -->
         <section class="view" id="view-students">
           <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
             <div><h2 class="view-title">Alumnado</h2><p class="view-subtitle">Fichas completas, NEAE y planes de apoyo</p></div>
-            <button class="btn btn-primary"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
+            <button class="btn btn-primary" onclick="openStudentModal()"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
           </div>
           <div class="grid grid-4" style="margin-bottom:var(--spacing-xl);">
-            <div class="stat-card" style="--stat-color: var(--color-primary);"><div class="stat-label">Total alumnos</div><div class="stat-value">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-warning);"><div class="stat-label">Con NEAE</div><div class="stat-value">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-success);"><div class="stat-label">Cumpleaños este mes</div><div class="stat-value">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-accent);"><div class="stat-label">Incidencias</div><div class="stat-value">0</div></div>
+            <div class="stat-card" style="--stat-color: var(--color-primary);"><div class="stat-label">Total alumnos</div><div class="stat-value" id="statTotalStudents">0</div></div>
+            <div class="stat-card" style="--stat-color: var(--color-warning);"><div class="stat-label">Con NEAE</div><div class="stat-value" id="statNeaeStudents">0</div></div>
+            <div class="stat-card" style="--stat-color: var(--color-success);"><div class="stat-label">Cumpleaños este mes</div><div class="stat-value" id="statBirthdays">0</div></div>
+            <div class="stat-card" style="--stat-color: var(--color-accent);"><div class="stat-label">Incidencias</div><div class="stat-value" id="statIncidents">0</div></div>
           </div>
           <div class="card">
-            <div class="empty-state">
-              <div class="empty-state-icon"><i data-lucide="users"></i></div>
-              <p class="empty-state-title">Aún no hay alumnos registrados</p>
-              <p class="empty-state-text">Hasta 180 fichas con datos completos, NEAE y contactos familiares</p>
+            <div class="card-header">
+              <h3 class="card-title"><i data-lucide="search"></i> Buscar alumno</h3>
+              <input type="text" class="form-input" id="studentSearch" placeholder="Nombre, grupo o NEAE..." style="max-width:300px;" oninput="filterStudents()">
             </div>
+            <div id="studentsList"></div>
           </div>
         </section>
 
+        <!-- MIS CLASES -->
         <section class="view" id="view-classes">
-          <div class="view-header"><h2 class="view-title">Panel de Mis Clases</h2><p class="view-subtitle">Hasta 12 grupos con lista, plano de aula y notas</p></div>
-          <div class="card"><div class="empty-state"><div class="empty-state-icon"><i data-lucide="school"></i></div><p class="empty-state-title">Sin grupos asignados</p><p class="empty-state-text">Crea materias para ver tus grupos aquí</p></div></div>
+          <div class="view-header">
+            <h2 class="view-title">Panel de Mis Clases</h2>
+            <p class="view-subtitle">Hasta 12 grupos con lista, plano de aula y notas</p>
+          </div>
+          <div id="classesList"></div>
         </section>
 
+        <!-- EVALUACIÓN -->
         <section class="view" id="view-evaluation">
-          <div class="view-header"><h2 class="view-title">Evaluación y Registros</h2><p class="view-subtitle">Calificaciones, conducta y juntas de evaluación</p></div>
+          <div class="view-header">
+            <h2 class="view-title">Evaluación y Registros</h2>
+            <p class="view-subtitle">Calificaciones, conducta y juntas de evaluación</p>
+          </div>
           <div class="grid grid-2">
-            <div class="card"><div class="card-title"><i data-lucide="award"></i> Registro de calificaciones</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Por grupo y periodo</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Descriptores por alumno</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="calendar-check"></i> Periodos de evaluación</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">3 periodos configurables</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="users-round"></i> Juntas de evaluación</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Actas y acuerdos</p></div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="award"></i> Registro de calificaciones</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Por grupo y periodo</p>
+              <button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);" onclick="openGradesModal()">Gestionar</button>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Descriptores por alumno</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="calendar-check"></i> Periodos de evaluación</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">3 periodos configurables</p>
+            </div>
+            <div class="card">
+              <div class="card-title"><i data-lucide="users-round"></i> Juntas de evaluación</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Actas y acuerdos</p>
+            </div>
           </div>
         </section>
 
@@ -901,7 +1001,7 @@
           </div>
         </section>
 
-        <!-- CONFIGURACIÓN COMPLETA -->
+        <!-- CONFIGURACIÓN -->
         <section class="view" id="view-settings">
           <div class="view-header">
             <h2 class="view-title">Configuración</h2>
@@ -909,7 +1009,6 @@
           </div>
 
           <div class="grid grid-2">
-            <!-- PERSONALIZACIÓN VISUAL -->
             <div class="card">
               <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="palette"></i> Personalización visual</div>
               <div class="form-group">
@@ -936,7 +1035,6 @@
               </div>
             </div>
 
-            <!-- FONDO DE PANTALLA -->
             <div class="card">
               <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="image"></i> Fondo de pantalla</div>
               <div class="style-preview" id="bgPreview">Vista previa del fondo</div>
@@ -961,7 +1059,6 @@
               <button class="btn btn-ghost btn-sm" onclick="clearBg()">Quitar fondo</button>
             </div>
 
-            <!-- DATOS -->
             <div class="card">
               <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="database"></i> Datos</div>
               <div style="display:flex;flex-direction:column;gap:var(--spacing-sm);">
@@ -985,7 +1082,6 @@
               </div>
             </div>
 
-            <!-- GOOGLE CALENDAR -->
             <div class="card">
               <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="calendar-sync"></i> Google Calendar</div>
               <div class="toggle-container">
@@ -1000,12 +1096,11 @@
               </p>
               <button class="btn btn-secondary" id="btnConnectGCal" onclick="connectGCal()">
                 <i data-lucide="link" style="width:16px;height:16px;"></i>
-                Conectar Google Calendar
+                <span id="gcalButtonText">Conectar Google Calendar</span>
               </button>
               <div id="gcalStatus" style="margin-top:var(--spacing-md);font-size:12px;color:var(--color-text-muted);"></div>
             </div>
 
-            <!-- CUENTA -->
             <div class="card">
               <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="user"></i> Cuenta</div>
               <div style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
@@ -1118,6 +1213,102 @@
     </div>
   </div>
 
+  <!-- MODAL ALUMNO -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3 class="modal-title" id="studentModalTitle">Nuevo alumno</h3>
+        <button class="icon-btn" onclick="closeModal('studentModal')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="studentId">
+        <div class="tabs">
+          <div class="tab active" data-tab="personal">Datos personales</div>
+          <div class="tab" data-tab="family">Familia</div>
+          <div class="tab" data-tab="health">Salud</div>
+          <div class="tab" data-tab="neae">NEAE</div>
+        </div>
+        <div class="tab-content active" id="tab-personal">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Nombre completo *</label><input type="text" class="form-input" id="studentName"></div>
+            <div class="form-group"><label class="form-label">Matrícula</label><input type="text" class="form-input" id="studentId2"></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" class="form-input" id="studentBirth"></div>
+            <div class="form-group"><label class="form-label">Nacionalidad</label><input type="text" class="form-input" id="studentNationality"></div>
+            <div class="form-group"><label class="form-label">Género</label><select class="form-select" id="studentGender"><option value="">--</option><option value="M">Masculino</option><option value="F">Femenino</option><option value="O">Otro</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Institución</label><select class="form-select" id="studentInstitution"></select></div>
+            <div class="form-group"><label class="form-label">Grupo</label><input type="text" class="form-input" id="studentGroup"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Dirección</label><input type="text" class="form-input" id="studentAddress"></div>
+        </div>
+        <div class="tab-content" id="tab-family">
+          <h4 style="margin-bottom:var(--spacing-md);font-size:14px;">Tutor 1</h4>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-input" id="tutor1Name"></div>
+            <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="tutor1Phone"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="tutor1Email"></div>
+          </div>
+          <h4 style="margin:var(--spacing-lg) 0 var(--spacing-md);font-size:14px;">Tutor 2 (opcional)</h4>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-input" id="tutor2Name"></div>
+            <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="tutor2Phone"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="tutor2Email"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-health">
+          <div class="form-group"><label class="form-label">Alergias</label><textarea class="form-textarea" id="studentAllergies" placeholder="Ninguna conocida"></textarea></div>
+          <div class="form-group"><label class="form-label">Afecciones médicas</label><textarea class="form-textarea" id="studentConditions"></textarea></div>
+          <div class="form-group"><label class="form-label">Medicación</label><textarea class="form-textarea" id="studentMedication"></textarea></div>
+          <div class="form-group"><label class="form-label">Contacto de emergencia</label><input type="text" class="form-input" id="studentEmergency" placeholder="Nombre y teléfono"></div>
+        </div>
+        <div class="tab-content" id="tab-neae">
+          <div class="form-group">
+            <label class="form-label">Tipo de NEAE</label>
+            <select class="form-select" id="studentNeaeType">
+              <option value="none">Sin necesidades específicas</option>
+              <option value="support">Apoyo especializado</option>
+              <option value="adaptation">Adaptación curricular</option>
+              <option value="gifted">Altas capacidades</option>
+              <option value="late">Incorporación tardía</option>
+              <option value="individual">Plan de apoyo individual</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Medidas y apoyos</label><textarea class="form-textarea" id="studentNeaeMeasures"></textarea></div>
+          <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="studentNeaeNotes"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger btn-sm" id="btnDeleteStudent" onclick="deleteStudent()" style="display:none;margin-right:auto;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Eliminar</button>
+        <button class="btn btn-ghost" onclick="closeModal('studentModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveStudent()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CALIFICACIONES -->
+  <div class="modal-overlay" id="gradesModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3 class="modal-title">Registro de Calificaciones</h3>
+        <button class="icon-btn" onclick="closeModal('gradesModal')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Materia</label><select class="form-select" id="gradesSubject" onchange="loadGradesTable()"><option value="">-- Selecciona --</option></select></div>
+          <div class="form-group"><label class="form-label">Periodo</label><select class="form-select" id="gradesPeriod"><option value="1">1er Periodo</option><option value="2">2do Periodo</option><option value="3">3er Periodo</option></select></div>
+        </div>
+        <div id="gradesTableContainer"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('gradesModal')">Cerrar</button>
+        <button class="btn btn-primary" onclick="saveGrades()">Guardar calificaciones</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <script>
@@ -1135,16 +1326,23 @@
     const db = firebase.firestore();
     console.log('✅ Firebase inicializado');
 
+    // GOOGLE CALENDAR
+    const GCAL_CLIENT_ID = '877985632064-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'; // Reemplazar con tu Client ID
+    const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar';
+    let gapiInited = false;
+    let gisInited = false;
+    let tokenClient;
+
     // ESTADO
     const state = {
       user: null,
-      isLocalMode: false,
       currentView: 'dashboard',
       theme: localStorage.getItem('theme') || 'light',
       calendarView: 'annual',
       calendarDate: new Date(),
       gcalSync: localStorage.getItem('gcalSync') === 'true',
-      data: { institutions: [], subjects: [], events: [], students: [] },
+      gcalConnected: false,
+      data: { institutions: [], subjects: [], events: [], students: [], grades: {} },
       styles: JSON.parse(localStorage.getItem('styles') || '{}')
     };
 
@@ -1171,30 +1369,21 @@
     }
     function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 
-    // AUTENTICACIÓN
+    // AUTENTICACIÓN (Solo Google)
     async function loginWithGoogle() {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
         const result = await auth.signInWithPopup(provider);
         state.user = result.user;
-        state.isLocalMode = false;
         onAuthSuccess();
       } catch (error) {
         console.error(error);
         showToast('Error: ' + error.message, 'error');
       }
     }
-    function loginLocal() {
-      const localId = localStorage.getItem('localUserId') || 'local_' + Date.now();
-      localStorage.setItem('localUserId', localId);
-      state.user = { uid: localId, displayName: 'Modo Local', email: 'local@agenda.app', photoURL: null };
-      state.isLocalMode = true;
-      onAuthSuccess();
-      showToast('Sesión local iniciada', 'success');
-    }
     async function logout() {
       try {
-        if (!state.isLocalMode) await auth.signOut();
+        await auth.signOut();
         state.user = null;
         $('#loginScreen').classList.remove('hidden');
         $('#appContainer').classList.remove('active');
@@ -1206,15 +1395,16 @@
       $('#appContainer').classList.add('active');
       updateUserUI();
       loadUserData();
+      initGoogleCalendar();
       showToast(`¡Bienvenido, ${state.user.displayName || 'docente'}!`, 'success');
     }
     function updateUserUI() {
       const user = state.user;
       const name = user.displayName || 'Docente';
       $('#userName').textContent = name;
-      $('#userEmail').textContent = user.email || 'Local';
-      $('#settingsEmail').textContent = user.email || 'Local';
-      $('#settingsProvider').textContent = state.isLocalMode ? 'Local' : 'Google';
+      $('#userEmail').textContent = user.email || '';
+      $('#settingsEmail').textContent = user.email || '';
+      $('#settingsProvider').textContent = 'Google';
       $('#greetingName').textContent = name.split(' ')[0];
       $('#greetingDate').textContent = `${getGreeting()} · ${formatDate(new Date())}`;
       const avatar = $('#userAvatar');
@@ -1226,12 +1416,6 @@
     function getUserRef() { return db.collection('users').doc(state.user.uid); }
     async function loadUserData() {
       try {
-        if (state.isLocalMode) {
-          const saved = localStorage.getItem('agendaData_' + state.user.uid);
-          if (saved) state.data = JSON.parse(saved);
-          refreshAll();
-          return;
-        }
         const doc = await getUserRef().get();
         if (doc.exists) {
           const d = doc.data();
@@ -1239,7 +1423,8 @@
             institutions: d.institutions || [],
             subjects: d.subjects || [],
             events: d.events || [],
-            students: d.students || []
+            students: d.students || [],
+            grades: d.grades || {}
           };
         }
         refreshAll();
@@ -1247,18 +1432,108 @@
     }
     async function saveData() {
       try {
-        if (state.isLocalMode) {
-          localStorage.setItem('agendaData_' + state.user.uid, JSON.stringify(state.data));
-          return;
-        }
         await getUserRef().set({
           institutions: state.data.institutions,
           subjects: state.data.subjects,
           events: state.data.events,
           students: state.data.students,
+          grades: state.data.grades,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       } catch (e) { console.error(e); showToast('Error guardando', 'error'); }
+    }
+
+    // GOOGLE CALENDAR
+    function initGoogleCalendar() {
+      gapi.load('client', async () => {
+        try {
+          await gapi.client.init({
+            apiKey: firebaseConfig.apiKey,
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
+          });
+          gapiInited = true;
+          updateGCalUI();
+        } catch (err) {
+          console.error('Error init gapi:', err);
+        }
+      });
+
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GCAL_CLIENT_ID,
+        scope: GCAL_SCOPES,
+        callback: (resp) => {
+          if (resp.error) {
+            showToast('Error conectando Google Calendar', 'error');
+            return;
+          }
+          state.gcalConnected = true;
+          gapi.client.setToken(resp);
+          updateGCalUI();
+          showToast('✅ Google Calendar conectado', 'success');
+        }
+      });
+      gisInited = true;
+    }
+
+    async function connectGCal() {
+      if (!gapiInited || !gisInited) {
+        showToast('Esperando inicialización de Google...', 'info');
+        return;
+      }
+      if (state.gcalConnected) {
+        state.gcalConnected = false;
+        gapi.client.setToken(null);
+        updateGCalUI();
+        showToast('Google Calendar desconectado', 'info');
+        return;
+      }
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function updateGCalUI() {
+      const btn = $('#gcalButtonText');
+      const status = $('#gcalStatus');
+      if (state.gcalConnected) {
+        btn.textContent = 'Desconectar Google Calendar';
+        status.innerHTML = '<span style="color:var(--color-success);">✅ Conectado</span>';
+      } else {
+        btn.textContent = 'Conectar Google Calendar';
+        status.innerHTML = '<span style="color:var(--color-text-muted);">No conectado</span>';
+      }
+      $('#gcalToggle').classList.toggle('active', state.gcalSync);
+    }
+
+    async function createGCalEvent(event) {
+      if (!state.gcalConnected || !state.gcalSync) return;
+      try {
+        const gcalEvent = {
+          summary: event.title,
+          description: event.description || '',
+          start: { date: event.date },
+          end: { date: event.date },
+          colorId: getColorId(event.color)
+        };
+        await gapi.client.calendar.events.insert({
+          calendarId: 'primary',
+          resource: gcalEvent
+        });
+        showToast('📅 Evento creado en Google Calendar', 'success');
+      } catch (err) {
+        console.error('Error creating GCal event:', err);
+        showToast('Error sincronizando con Google Calendar', 'error');
+      }
+    }
+
+    function getColorId(hex) {
+      const colors = { '#2563eb': '1', '#10b981': '2', '#f59e0b': '5', '#ef4444': '11', '#8b5cf6': '3' };
+      return colors[hex] || '1';
+    }
+
+    function toggleGCal() {
+      state.gcalSync = !state.gcalSync;
+      localStorage.setItem('gcalSync', state.gcalSync);
+      $('#gcalToggle').classList.toggle('active', state.gcalSync);
+      showToast(state.gcalSync ? 'Sincronización activada' : 'Sincronización desactivada', 'info');
     }
 
     // NAVEGACIÓN
@@ -1291,6 +1566,8 @@
       state.currentView = viewName;
       $('#sidebar').classList.remove('open');
       if (viewName === 'calendar') renderCalendar();
+      if (viewName === 'students') renderStudents();
+      if (viewName === 'classes') renderClasses();
     }
 
     // DASHBOARD
@@ -1299,6 +1576,15 @@
       $('#statSubjects').textContent = state.data.subjects.length;
       $('#statStudents').textContent = state.data.students.length;
       $('#statEvents').textContent = state.data.events.length;
+      $('#statTotalStudents').textContent = state.data.students.length;
+      $('#statNeaeStudents').textContent = state.data.students.filter(s => s.neaeType && s.neaeType !== 'none').length;
+      const currentMonth = new Date().getMonth();
+      $('#statBirthdays').textContent = state.data.students.filter(s => {
+        if (!s.birthDate) return false;
+        return new Date(s.birthDate).getMonth() === currentMonth;
+      }).length;
+      $('#statIncidents').textContent = 0;
+
       const upcoming = state.data.events
         .filter(e => new Date(e.date) >= new Date(new Date().toDateString()))
         .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -1475,12 +1761,14 @@
       }
       container.innerHTML = '<div class="grid grid-3">' + state.data.subjects.map(subj => {
         const inst = state.data.institutions.find(i => i.id === subj.institutionId);
+        const studentCount = state.data.students.filter(s => s.subjectId === subj.id).length;
         return `<div class="subject-card" style="--subject-color: ${subj.color};">
           <div class="subject-card-header">
             <div>
               <div class="subject-card-title"><span class="subject-color-dot" style="background:${subj.color};"></span>${subj.name}</div>
               <div class="subject-card-info">${subj.group ? 'Grupo ' + subj.group : ''} ${subj.room ? '· ' + subj.room : ''}</div>
               <div class="subject-card-info" style="margin-top:4px;">${inst ? inst.name : 'Sin institución'}</div>
+              <div class="subject-card-info" style="margin-top:4px;"><span class="badge">${studentCount} alumnos</span></div>
             </div>
             <div style="display:flex;gap:var(--spacing-xs);">
               <button class="btn btn-ghost btn-sm" onclick="openSubjectModal('${subj.id}')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
@@ -1509,6 +1797,7 @@
           $('#eventSubject').value = ev.subjectId || '';
           $('#eventColor').value = ev.color || '#2563eb';
           $('#eventDescription').value = ev.description || '';
+          $('#gcalEventToggle').classList.toggle('active', ev.syncGCal || false);
         }
       } else {
         ['eventTitle','eventDescription'].forEach(id => $(`#${id}`).value = '');
@@ -1516,6 +1805,7 @@
         $('#eventType').value = 'class';
         $('#eventSubject').value = '';
         $('#eventColor').value = '#2563eb';
+        $('#gcalEventToggle').classList.toggle('active', state.gcalSync);
       }
       $('#eventModal').classList.add('active');
     }
@@ -1525,12 +1815,14 @@
       if (!title) { showToast('El título es obligatorio', 'error'); return; }
       if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
       const id = $('#eventId').value || generateId();
+      const syncGCal = $('#gcalEventToggle').classList.contains('active');
       const event = {
         id, title, date,
         type: $('#eventType').value,
         subjectId: $('#eventSubject').value,
         color: $('#eventColor').value,
         description: $('#eventDescription').value.trim(),
+        syncGCal,
         createdAt: new Date().toISOString()
       };
       const idx = state.data.events.findIndex(e => e.id === id);
@@ -1541,9 +1833,8 @@
       if (state.currentView === 'calendar') renderCalendar();
       closeModal('eventModal');
       showToast('Evento guardado', 'success');
-      // Si está activada la sincronización con Google Calendar
-      if (state.gcalSync) {
-        showToast('📅 Evento sincronizado con Google Calendar', 'success');
+      if (syncGCal && state.gcalConnected) {
+        await createGCalEvent(event);
       }
     }
     async function deleteEvent() {
@@ -1557,337 +1848,81 @@
       showToast('Evento eliminado', 'success');
     }
 
-    // CALENDARIO
-    function setCalendarView(view) {
-      state.calendarView = view;
-      $$('.cal-view-btn').forEach(b => {
-        b.classList.remove('btn-secondary', 'active');
-        b.classList.add('btn-ghost');
-      });
-      const active = $(`.cal-view-btn[data-calview="${view}"]`);
-      active.classList.remove('btn-ghost');
-      active.classList.add('btn-secondary', 'active');
-      renderCalendar();
-    }
-    function renderCalendar() {
-      const container = $('#calendarContainer');
-      if (state.calendarView === 'annual') renderAnnualCalendar(container);
-      else if (state.calendarView === 'monthly') renderMonthlyCalendar(container);
-      else if (state.calendarView === 'weekly') renderWeeklyCalendar(container);
-    }
-    function renderAnnualCalendar(container) {
-      const year = state.calendarDate.getFullYear();
-      const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const dayNames = ['L','M','M','J','V','S','D'];
-      let html = `<div class="calendar-nav">
-        <button class="btn btn-ghost" onclick="changeYear(-1)"><i data-lucide="chevron-left"></i></button>
-        <div class="calendar-nav-title">${year}</div>
-        <button class="btn btn-ghost" onclick="changeYear(1)"><i data-lucide="chevron-right"></i></button>
-      </div><div class="calendar-annual">`;
-      for (let m = 0; m < 12; m++) {
-        html += `<div class="calendar-month"><div class="calendar-month-title">${monthNames[m]}</div><div class="calendar-days-header">`;
-        dayNames.forEach(d => html += `<div>${d}</div>`);
-        html += '</div><div class="calendar-days">';
-        const firstDay = new Date(year, m, 1);
-        const lastDay = new Date(year, m + 1, 0);
-        let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-        for (let i = 0; i < startDay; i++) html += '<div class="calendar-day other-month"></div>';
-        for (let d = 1; d <= lastDay.getDate(); d++) {
-          const dateStr = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-          const isToday = dateStr === new Date().toISOString().split('T')[0];
-          const hasEvents = state.data.events.some(e => e.date === dateStr);
-          html += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}" onclick="openEventModal(null,'${dateStr}')">${d}</div>`;
+    // ALUMNOS
+    function openStudentModal(id = null) {
+      const select = $('#studentInstitution');
+      select.innerHTML = '<option value="">-- Selecciona institución --</option>' +
+        state.data.institutions.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+      $('#studentModalTitle').textContent = id ? 'Editar alumno' : 'Nuevo alumno';
+      $('#studentId').value = id || '';
+      $('#btnDeleteStudent').style.display = id ? 'inline-flex' : 'none';
+      if (id) {
+        const student = state.data.students.find(s => s.id === id);
+        if (student) {
+          $('#studentName').value = student.name || '';
+          $('#studentId2').value = student.studentId || '';
+          $('#studentBirth').value = student.birthDate || '';
+          $('#studentNationality').value = student.nationality || '';
+          $('#studentGender').value = student.gender || '';
+          $('#studentInstitution').value = student.institutionId || '';
+          $('#studentGroup').value = student.group || '';
+          $('#studentAddress').value = student.address || '';
+          $('#tutor1Name').value = student.tutor1?.name || '';
+          $('#tutor1Phone').value = student.tutor1?.phone || '';
+          $('#tutor1Email').value = student.tutor1?.email || '';
+          $('#tutor2Name').value = student.tutor2?.name || '';
+          $('#tutor2Phone').value = student.tutor2?.phone || '';
+          $('#tutor2Email').value = student.tutor2?.email || '';
+          $('#studentAllergies').value = student.allergies || '';
+          $('#studentConditions').value = student.conditions || '';
+          $('#studentMedication').value = student.medication || '';
+          $('#studentEmergency').value = student.emergency || '';
+          $('#studentNeaeType').value = student.neaeType || 'none';
+          $('#studentNeaeMeasures').value = student.neaeMeasures || '';
+          $('#studentNeaeNotes').value = student.neaeNotes || '';
         }
-        html += '</div></div>';
+      } else {
+        ['studentName','studentId2','studentBirth','studentNationality','studentGroup','studentAddress',
+         'tutor1Name','tutor1Phone','tutor1Email','tutor2Name','tutor2Phone','tutor2Email',
+         'studentAllergies','studentConditions','studentMedication','studentEmergency',
+         'studentNeaeMeasures','studentNeaeNotes'].forEach(id => $(`#${id}`).value = '');
+        $('#studentGender').value = '';
+        $('#studentNeaeType').value = 'none';
       }
-      html += '</div>';
-      container.innerHTML = html;
-      lucide.createIcons();
+      // Reset tabs
+      $$('.tab').forEach(t => t.classList.remove('active'));
+      $$('.tab-content').forEach(t => t.classList.remove('active'));
+      $('.tab[data-tab="personal"]').classList.add('active');
+      $('#tab-personal').classList.add('active');
+      $('#studentModal').classList.add('active');
     }
-    function renderMonthlyCalendar(container) {
-      const year = state.calendarDate.getFullYear();
-      const month = state.calendarDate.getMonth();
-      const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const dayNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-      let html = `<div class="calendar-nav">
-        <button class="btn btn-ghost" onclick="changeMonth(-1)"><i data-lucide="chevron-left"></i></button>
-        <div class="calendar-nav-title">${monthNames[month]} ${year}</div>
-        <button class="btn btn-ghost" onclick="changeMonth(1)"><i data-lucide="chevron-right"></i></button>
-      </div><div class="calendar-monthly-grid">`;
-      dayNames.forEach(d => html += `<div class="calendar-monthly-day header">${d}</div>`);
-      for (let i = 0; i < startDay; i++) {
-        const prevDate = new Date(year, month, -startDay + i + 1);
-        html += `<div class="calendar-monthly-day other-month"><div class="calendar-monthly-day-number">${prevDate.getDate()}</div></div>`;
-      }
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday = dateStr === new Date().toISOString().split('T')[0];
-        const dayEvents = state.data.events.filter(e => e.date === dateStr);
-        html += `<div class="calendar-monthly-day ${isToday ? 'today' : ''}" onclick="openEventModal(null,'${dateStr}')">
-          <div class="calendar-monthly-day-number">${d}</div>
-          ${dayEvents.map(e => {
-            const subj = state.data.subjects.find(s => s.id === e.subjectId);
-            const color = e.color || (subj ? subj.color : '#2563eb');
-            return `<div class="calendar-event-chip" style="--event-color:${color};" onclick="event.stopPropagation();openEventModal('${e.id}')">${e.title}</div>`;
-          }).join('')}
-        </div>`;
-      }
-      const totalCells = startDay + lastDay.getDate();
-      const remaining = 7 - (totalCells % 7);
-      if (remaining < 7) {
-        for (let i = 1; i <= remaining; i++) {
-          html += `<div class="calendar-monthly-day other-month"><div class="calendar-monthly-day-number">${i}</div></div>`;
-        }
-      }
-      html += '</div>';
-      container.innerHTML = html;
-      lucide.createIcons();
-    }
-    function renderWeeklyCalendar(container) {
-      const current = new Date(state.calendarDate);
-      const dayOfWeek = current.getDay() === 0 ? 6 : current.getDay() - 1;
-      const monday = new Date(current);
-      monday.setDate(current.getDate() - dayOfWeek);
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      const dayNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-      const hours = Array.from({length: 12}, (_, i) => i + 7);
-      let html = `<div class="calendar-nav">
-        <button class="btn btn-ghost" onclick="changeWeek(-1)"><i data-lucide="chevron-left"></i></button>
-        <div class="calendar-nav-title">${monday.getDate()}/${monday.getMonth()+1} - ${sunday.getDate()}/${sunday.getMonth()+1}</div>
-        <button class="btn btn-ghost" onclick="changeWeek(1)"><i data-lucide="chevron-right"></i></button>
-      </div><div class="calendar-weekly">`;
-      html += '<div class="calendar-weekly-cell header">Hora</div>';
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        const isToday = d.toDateString() === new Date().toDateString();
-        html += `<div class="calendar-weekly-cell header" style="${isToday ? 'background:var(--color-primary-light);' : ''}">${dayNames[i]}<br><small>${d.getDate()}/${d.getMonth()+1}</small></div>`;
-      }
-      hours.forEach(h => {
-        html += `<div class="calendar-weekly-cell time">${h}:00</div>`;
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(monday);
-          d.setDate(monday.getDate() + i);
-          const dateStr = d.toISOString().split('T')[0];
-          const hourEvents = state.data.events.filter(e => e.date === dateStr);
-          html += `<div class="calendar-weekly-cell" onclick="openEventModal(null,'${dateStr}')">`;
-          hourEvents.forEach(e => {
-            const subj = state.data.subjects.find(s => s.id === e.subjectId);
-            const color = e.color || (subj ? subj.color : '#2563eb');
-            html += `<div class="calendar-event-chip" style="--event-color:${color};margin-bottom:2px;" onclick="event.stopPropagation();openEventModal('${e.id}')">${e.title}</div>`;
-          });
-          html += '</div>';
-        }
-      });
-      html += '</div>';
-      container.innerHTML = html;
-      lucide.createIcons();
-    }
-    function changeYear(delta) { state.calendarDate.setFullYear(state.calendarDate.getFullYear() + delta); renderCalendar(); }
-    function changeMonth(delta) { state.calendarDate.setMonth(state.calendarDate.getMonth() + delta); renderCalendar(); }
-    function changeWeek(delta) { state.calendarDate.setDate(state.calendarDate.getDate() + (delta * 7)); renderCalendar(); }
-
-    // MODALES
-    function closeModal(id) { $(`#${id}`).classList.remove('active'); }
-
-    // TEMA
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      state.theme = theme;
-      localStorage.setItem('theme', theme);
-      const icon = theme === 'dark' ? 'sun' : 'moon';
-      $('#btnTheme').innerHTML = `<i data-lucide="${icon}"></i>`;
-      $('#settingsTheme').textContent = theme === 'dark' ? 'Oscuro' : 'Claro';
-      lucide.createIcons();
-    }
-
-    // ESTILOS
-    function applyStyles() {
-      const styles = state.styles;
-      if (styles.primary) document.documentElement.style.setProperty('--color-primary', styles.primary);
-      if (styles.secondary) document.documentElement.style.setProperty('--color-secondary', styles.secondary);
-      if (styles.accent) document.documentElement.style.setProperty('--color-accent', styles.accent);
-      if (styles.font) document.documentElement.style.setProperty('--font-primary', `'${styles.font}', sans-serif`);
-      if (styles.bg) {
-        if (styles.bg === 'none') {
-          document.body.classList.remove('has-bg-image');
-          document.documentElement.style.removeProperty('--bg-image');
-        } else if (styles.bg.startsWith('http')) {
-          document.body.classList.add('has-bg-image');
-          document.documentElement.style.setProperty('--bg-image', `url(${styles.bg})`);
-          $('#bgUrl').value = styles.bg;
-        } else {
-          document.body.classList.add('has-bg-image');
-          document.documentElement.style.setProperty('--bg-image', styles.bg);
-        }
-      }
-      // Actualizar inputs
-      if (styles.primary) $('#colorPrimary').value = styles.primary;
-      if (styles.secondary) $('#colorSecondary').value = styles.secondary;
-      if (styles.accent) $('#colorAccent').value = styles.accent;
-      if (styles.font) $('#fontSelect').value = styles.font;
-    }
-    function saveStyles() {
-      localStorage.setItem('styles', JSON.stringify(state.styles));
-    }
-    function applyCustomBg() {
-      const url = $('#bgUrl').value.trim();
-      if (!url) { showToast('Ingresa una URL válida', 'error'); return; }
-      state.styles.bg = url;
-      applyStyles();
-      saveStyles();
-      showToast('Fondo aplicado', 'success');
-    }
-    function clearBg() {
-      state.styles.bg = 'none';
-      $('#bgUrl').value = '';
-      applyStyles();
-      saveStyles();
-      showToast('Fondo quitado', 'success');
-    }
-
-    // EXPORTAR / IMPORTAR
-    function exportData() {
-      const dataStr = JSON.stringify(state.data, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `agenda-docente-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Datos exportados correctamente', 'success');
-    }
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (!imported.institutions || !imported.subjects || !imported.events) {
-            throw new Error('Formato inválido');
-          }
-          if (confirm('¿Reemplazar todos los datos actuales con los importados?')) {
-            state.data = imported;
-            await saveData();
-            refreshAll();
-            showToast('Datos importados correctamente', 'success');
-          }
-        } catch (err) {
-          showToast('Error al importar: ' + err.message, 'error');
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    }
-    async function clearAllData() {
-      if (!confirm('️ ¿Estás seguro? Se borrarán TODOS los datos (instituciones, materias, eventos, alumnos). Esta acción no se puede deshacer.')) return;
-      if (!confirm('Última confirmación: ¿Realmente quieres borrar todo?')) return;
-      state.data = { institutions: [], subjects: [], events: [], students: [] };
-      await saveData();
-      refreshAll();
-      showToast('Todos los datos han sido borrados', 'success');
-    }
-
-    // GOOGLE CALENDAR
-    function toggleGCal() {
-      state.gcalSync = !state.gcalSync;
-      localStorage.setItem('gcalSync', state.gcalSync);
-      $('#gcalToggle').classList.toggle('active', state.gcalSync);
-      showToast(state.gcalSync ? 'Sincronización activada' : 'Sincronización desactivada', 'info');
-    }
-    function connectGCal() {
-      showToast('Conexión con Google Calendar disponible en Fase 3', 'info');
-    }
-
-    // REFRESH
-    function refreshAll() {
-      renderInstitutions();
-      renderSubjects();
-      updateDashboardStats();
-      if (state.currentView === 'calendar') renderCalendar();
-    }
-
-    // INIT
-    document.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      applyTheme(state.theme);
-      applyStyles();
-      $('#gcalToggle').classList.toggle('active', state.gcalSync);
-
-      $('#btnGoogleLogin').addEventListener('click', loginWithGoogle);
-      $('#btnLocalLogin').addEventListener('click', loginLocal);
-      $('#btnLogout').addEventListener('click', logout);
-      $('#btnLogoutSettings').addEventListener('click', logout);
-      $('#btnTheme').addEventListener('click', () => applyTheme(state.theme === 'light' ? 'dark' : 'light'));
-      $('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
-
-      $$('.nav-item, [data-view]').forEach(el => {
-        el.addEventListener('click', (e) => {
-          const view = el.getAttribute('data-view');
-          if (view) navigateTo(view);
-        });
-      });
-
-      $$('.cal-view-btn').forEach(btn => {
-        btn.addEventListener('click', () => setCalendarView(btn.dataset.calview));
-      });
-
-      // Estilos en tiempo real
-      $('#colorPrimary').addEventListener('input', (e) => {
-        state.styles.primary = e.target.value;
-        document.documentElement.style.setProperty('--color-primary', e.target.value);
-        saveStyles();
-      });
-      $('#colorSecondary').addEventListener('input', (e) => {
-        state.styles.secondary = e.target.value;
-        document.documentElement.style.setProperty('--color-secondary', e.target.value);
-        saveStyles();
-      });
-      $('#colorAccent').addEventListener('input', (e) => {
-        state.styles.accent = e.target.value;
-        document.documentElement.style.setProperty('--color-accent', e.target.value);
-        saveStyles();
-      });
-      $('#fontSelect').addEventListener('change', (e) => {
-        state.styles.font = e.target.value;
-        document.documentElement.style.setProperty('--font-primary', `'${e.target.value}', sans-serif`);
-        saveStyles();
-      });
-
-      // Fondos predeterminados
-      $$('.bg-preset').forEach(preset => {
-        preset.addEventListener('click', () => {
-          $$('.bg-preset').forEach(p => p.classList.remove('active'));
-          preset.classList.add('active');
-          state.styles.bg = preset.dataset.bg;
-          applyStyles();
-          saveStyles();
-          showToast('Fondo aplicado', 'success');
-        });
-      });
-
-      // Cerrar modales al hacer clic fuera
-      $$('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) overlay.classList.remove('active');
-        });
-      });
-
-      auth.onAuthStateChanged((user) => {
-        if (user && !state.isLocalMode) {
-          state.user = user;
-          onAuthSuccess();
-        }
-      });
-
-      console.log('🎓 Agenda Docente Fase 2 completa cargada');
-    });
-  </script>
-</body>
-  </html>
+    async function saveStudent() {
+      const name = $('#studentName').value.trim();
+      if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+      const id = $('#studentId').value || generateId();
+      const student = {
+        id, name,
+        studentId: $('#studentId2').value.trim(),
+        birthDate: $('#studentBirth').value,
+        nationality: $('#studentNationality').value.trim(),
+        gender: $('#studentGender').value,
+        institutionId: $('#studentInstitution').value,
+        group: $('#studentGroup').value.trim(),
+        address: $('#studentAddress').value.trim(),
+        tutor1: {
+          name: $('#tutor1Name').value.trim(),
+          phone: $('#tutor1Phone').value.trim(),
+          email: $('#tutor1Email').value.trim()
+        },
+        tutor2: {
+          name: $('#tutor2Name').value.trim(),
+          phone: $('#tutor2Phone').value.trim(),
+          email: $('#tutor2Email').value.trim()
+        },
+        allergies: $('#studentAllergies').value.trim(),
+        conditions: $('#studentConditions').value.trim(),
+        medication: $('#studentMedication').value.trim(),
+        emergency: $('#studentEmergency').value.trim(),
+        neaeType: $('#studentNeaeType').value,
+        neaeMeasures: $('#studentNeaeMeasures').value.trim(),
+        neaeNotes: $('#studentNeaeNotes').
