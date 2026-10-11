@@ -14,7 +14,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
-  <!-- Firebase SDKs (Compat para simplicidad) -->
+  <!-- Firebase SDKs (Compat - MUY IMPORTANTE) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -24,7 +24,6 @@
        VARIABLES Y RESET
        ============================================ */
     :root {
-      /* Paleta principal */
       --color-primary: #2563eb;
       --color-primary-dark: #1d4ed8;
       --color-primary-light: #dbeafe;
@@ -34,35 +33,29 @@
       --color-danger: #ef4444;
       --color-warning: #f59e0b;
 
-      /* Superficies */
       --color-bg: #f8fafc;
       --color-surface: #ffffff;
       --color-surface-elevated: #ffffff;
       --color-border: #e2e8f0;
       --color-border-light: #f1f5f9;
 
-      /* Texto */
       --color-text: #0f172a;
       --color-text-muted: #64748b;
       --color-text-light: #94a3b8;
 
-      /* Sombras */
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
 
-      /* Radios */
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-xl: 20px;
 
-      /* Tipografía */
       --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-display: 'Montserrat', var(--font-primary);
 
-      /* Espaciado */
       --spacing-xs: 4px;
       --spacing-sm: 8px;
       --spacing-md: 16px;
@@ -70,17 +63,14 @@
       --spacing-xl: 32px;
       --spacing-2xl: 48px;
 
-      /* Layout */
       --sidebar-width: 260px;
       --header-height: 64px;
 
-      /* Transiciones */
       --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
       --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
       --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Modo oscuro */
     [data-theme="dark"] {
       --color-bg: #0f172a;
       --color-surface: #1e293b;
@@ -93,16 +83,11 @@
       --color-primary-light: #1e3a8a;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html {
       scroll-behavior: smooth;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
@@ -213,10 +198,7 @@
       transform: translateY(-1px);
     }
 
-    .btn-google img {
-      width: 20px;
-      height: 20px;
-    }
+    .btn-google img { width: 20px; height: 20px; }
 
     .btn-local {
       width: 100%;
@@ -277,7 +259,6 @@
       grid-template-columns: var(--sidebar-width) 1fr;
     }
 
-    /* SIDEBAR */
     .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border);
@@ -444,7 +425,6 @@
       text-overflow: ellipsis;
     }
 
-    /* MAIN CONTENT */
     .main-content {
       min-height: 100vh;
       display: flex;
@@ -520,9 +500,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .view-header {
-      margin-bottom: var(--spacing-xl);
-    }
+    .view-header { margin-bottom: var(--spacing-xl); }
 
     .view-title {
       font-family: var(--font-display);
@@ -565,12 +543,7 @@
 
     .card-title i { color: var(--color-primary); }
 
-    /* GRID LAYOUTS */
-    .grid {
-      display: grid;
-      gap: var(--spacing-lg);
-    }
-
+    .grid { display: grid; gap: var(--spacing-lg); }
     .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
     .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -673,9 +646,7 @@
     }
 
     /* FORMULARIOS */
-    .form-group {
-      margin-bottom: var(--spacing-md);
-    }
+    .form-group { margin-bottom: var(--spacing-md); }
 
     .form-label {
       display: block;
@@ -708,7 +679,6 @@
     .form-textarea {
       min-height: 100px;
       resize: vertical;
-      font-family: inherit;
     }
 
     /* EMPTY STATE */
@@ -779,20 +749,6 @@
     .toast.error i { color: var(--color-danger); }
     .toast.info i { color: var(--color-primary); }
 
-    /* LOADING */
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--color-border);
-      border-top-color: var(--color-primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     /* BADGE */
     .badge {
       display: inline-flex;
@@ -812,9 +768,7 @@
 
     /* RESPONSIVE */
     @media (max-width: 1024px) {
-      .app-container.active {
-        grid-template-columns: 1fr;
-      }
+      .app-container.active { grid-template-columns: 1fr; }
       .sidebar {
         position: fixed;
         left: -100%;
@@ -834,7 +788,6 @@
 
     .menu-toggle { display: none; }
 
-    /* Scrollbar global */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb {
@@ -1006,7 +959,7 @@
 
       <div class="content-area">
 
-        <!-- ============ DASHBOARD ============ -->
+        <!-- DASHBOARD -->
         <section class="view active" id="view-dashboard">
           <div class="view-header">
             <h2 class="view-title">¡Buen día, <span id="greetingName">docente</span>! 👋</h2>
@@ -1039,10 +992,7 @@
           <div class="grid grid-2">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">
-                  <i data-lucide="calendar-check"></i>
-                  Próximos eventos
-                </h3>
+                <h3 class="card-title"><i data-lucide="calendar-check"></i> Próximos eventos</h3>
                 <button class="btn btn-ghost" data-view="calendar">Ver todos</button>
               </div>
               <div id="upcomingEvents">
@@ -1056,10 +1006,7 @@
 
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">
-                  <i data-lucide="zap"></i>
-                  Accesos rápidos
-                </h3>
+                <h3 class="card-title"><i data-lucide="zap"></i> Accesos rápidos</h3>
               </div>
               <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--spacing-sm);">
                 <button class="btn btn-secondary" data-view="institutions">
@@ -1083,10 +1030,7 @@
 
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">
-                  <i data-lucide="target"></i>
-                  Clases de hoy
-                </h3>
+                <h3 class="card-title"><i data-lucide="target"></i> Clases de hoy</h3>
               </div>
               <div class="empty-state">
                 <div class="empty-state-icon"><i data-lucide="school"></i></div>
@@ -1097,10 +1041,7 @@
 
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">
-                  <i data-lucide="trending-up"></i>
-                  Progreso del ciclo
-                </h3>
+                <h3 class="card-title"><i data-lucide="trending-up"></i> Progreso del ciclo</h3>
               </div>
               <div style="padding:var(--spacing-md) 0;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:var(--spacing-sm);">
@@ -1118,7 +1059,7 @@
           </div>
         </section>
 
-        <!-- ============ INSTITUCIONES ============ -->
+        <!-- INSTITUCIONES -->
         <section class="view" id="view-institutions">
           <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
             <div>
@@ -1135,15 +1076,11 @@
               <div class="empty-state-icon"><i data-lucide="building-2"></i></div>
               <p class="empty-state-title">Aún no tienes instituciones</p>
               <p class="empty-state-text">Comienza creando tu primera institución académica</p>
-              <button class="btn btn-primary" id="btnNewInstitutionEmpty">
-                <i data-lucide="plus" style="width:16px;height:16px;"></i>
-                Crear institución
-              </button>
             </div>
           </div>
         </section>
 
-        <!-- ============ MATERIAS ============ -->
+        <!-- MATERIAS -->
         <section class="view" id="view-subjects">
           <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
             <div>
@@ -1164,7 +1101,7 @@
           </div>
         </section>
 
-        <!-- ============ CALENDARIO ============ -->
+        <!-- CALENDARIO -->
         <section class="view" id="view-calendar">
           <div class="view-header">
             <h2 class="view-title">Calendarios Enlazados</h2>
@@ -1190,7 +1127,7 @@
           </div>
         </section>
 
-        <!-- ============ PLANEACIÓN ============ -->
+        <!-- PLANEACIÓN -->
         <section class="view" id="view-planning">
           <div class="view-header">
             <h2 class="view-title">Enseñanza y Planeación</h2>
@@ -1198,63 +1135,39 @@
           </div>
           <div class="grid grid-3">
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="calendar-range"></i> Programación anual
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Planifica el año por materia y grupo
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="calendar-range"></i> Programación anual</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Planifica el año por materia y grupo</p>
               <button class="btn btn-secondary" style="width:100%;">Configurar</button>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="layers"></i> Unidades didácticas
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Hasta 6 unidades por materia
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="layers"></i> Unidades didácticas</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Hasta 6 unidades por materia</p>
               <button class="btn btn-secondary" style="width:100%;">Gestionar</button>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="calendar-clock"></i> Planeación semanal
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Avance semana a semana
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="calendar-clock"></i> Planeación semanal</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Avance semana a semana</p>
               <button class="btn btn-secondary" style="width:100%;">Planificar</button>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="file-edit"></i> Bitácora diaria
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Registro por día de clase
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="file-edit"></i> Bitácora diaria</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Registro por día de clase</p>
               <button class="btn btn-secondary" style="width:100%;">Registrar</button>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="clipboard-check"></i> Evaluaciones programadas
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Fechas, grupos y contenidos
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="clipboard-check"></i> Evaluaciones programadas</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Fechas, grupos y contenidos</p>
               <button class="btn btn-secondary" style="width:100%;">Programar</button>
             </div>
             <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-md);">
-                <i data-lucide="map-pin"></i> Salidas y excursiones
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                Planifica actividades externas
-              </p>
+              <div class="card-title" style="margin-bottom:var(--spacing-md);"><i data-lucide="map-pin"></i> Salidas y excursiones</div>
+              <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">Planifica actividades externas</p>
               <button class="btn btn-secondary" style="width:100%;">Organizar</button>
             </div>
           </div>
         </section>
 
-        <!-- ============ DETALLES DE MATERIA ============ -->
+        <!-- DETALLES DE MATERIA -->
         <section class="view" id="view-subject-details">
           <div class="view-header">
             <h2 class="view-title">Detalles de Materia</h2>
@@ -1270,7 +1183,7 @@
           </div>
         </section>
 
-        <!-- ============ ALUMNADO ============ -->
+        <!-- ALUMNADO -->
         <section class="view" id="view-students">
           <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
             <div>
@@ -1309,7 +1222,7 @@
           </div>
         </section>
 
-        <!-- ============ MIS CLASES ============ -->
+        <!-- MIS CLASES -->
         <section class="view" id="view-classes">
           <div class="view-header">
             <h2 class="view-title">Panel de Mis Clases</h2>
@@ -1324,7 +1237,7 @@
           </div>
         </section>
 
-        <!-- ============ EVALUACIÓN ============ -->
+        <!-- EVALUACIÓN -->
         <section class="view" id="view-evaluation">
           <div class="view-header">
             <h2 class="view-title">Evaluación y Registros</h2>
@@ -1350,7 +1263,7 @@
           </div>
         </section>
 
-        <!-- ============ FAMILIAS ============ -->
+        <!-- FAMILIAS -->
         <section class="view" id="view-families">
           <div class="view-header">
             <h2 class="view-title">Familias</h2>
@@ -1368,7 +1281,7 @@
           </div>
         </section>
 
-        <!-- ============ PERSONAL ============ -->
+        <!-- PERSONAL -->
         <section class="view" id="view-staff">
           <div class="view-header">
             <h2 class="view-title">Personal y Reuniones</h2>
@@ -1386,7 +1299,7 @@
           </div>
         </section>
 
-        <!-- ============ BIENESTAR ============ -->
+        <!-- BIENESTAR -->
         <section class="view" id="view-wellbeing">
           <div class="view-header">
             <h2 class="view-title">Bienestar Docente 🧘</h2>
@@ -1412,7 +1325,7 @@
           </div>
         </section>
 
-        <!-- ============ FORMACIÓN ============ -->
+        <!-- FORMACIÓN -->
         <section class="view" id="view-training">
           <div class="view-header">
             <h2 class="view-title">Formación y Carrera</h2>
@@ -1430,7 +1343,7 @@
           </div>
         </section>
 
-        <!-- ============ CONFIGURACIÓN ============ -->
+        <!-- CONFIGURACIÓN -->
         <section class="view" id="view-settings">
           <div class="view-header">
             <h2 class="view-title">Configuración</h2>
@@ -1522,9 +1435,8 @@
        ============================================ -->
   <script>
     /* ============================================
-       CONFIGURACIÓN FIREBASE
-       ⚠️ REEMPLAZA ESTOS VALORES CON TUS CREDENCIALES
-       ============================================ 
+       CONFIGURACIÓN FIREBASE (TUS CREDENCIALES)
+       ============================================ */
     const firebaseConfig = {
       apiKey: "AIzaSyBKFxQG7buVaP47ghdUiXLbCjTfk3i1TVA",
       authDomain: "agenda-docente-cfcb3.firebaseapp.com",
@@ -1538,6 +1450,8 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    console.log('✅ Firebase inicializado correctamente');
 
     /* ============================================
        ESTADO GLOBAL
@@ -1618,7 +1532,6 @@
     }
 
     function loginLocal() {
-      // Modo local: usuario anónimo persistente
       const localId = localStorage.getItem('localUserId') || 'local_' + Date.now();
       localStorage.setItem('localUserId', localId);
       state.user = {
@@ -1682,7 +1595,6 @@
     async function loadUserData() {
       try {
         if (state.isLocalMode) {
-          // Modo local: usar localStorage
           const saved = localStorage.getItem('agendaData_' + state.user.uid);
           if (saved) {
             state.data = JSON.parse(saved);
@@ -1691,12 +1603,10 @@
           return;
         }
 
-        // Firebase: cargar datos del usuario
         const userDoc = await db.collection('users').doc(state.user.uid).get();
         if (userDoc.exists) {
           state.data = userDoc.data();
         } else {
-          // Crear documento inicial
           state.data = {
             profile: {
               displayName: state.user.displayName,
@@ -1735,7 +1645,6 @@
       }
     }
 
-    // Autoguardado con debounce
     let saveTimeout;
     function autoSave() {
       clearTimeout(saveTimeout);
@@ -1748,17 +1657,14 @@
        NAVEGACIÓN
        ============================================ */
     function navigateTo(viewName) {
-      // Ocultar todas las vistas
       $$('.view').forEach(v => v.classList.remove('active'));
       $$('.nav-item').forEach(n => n.classList.remove('active'));
 
-      // Mostrar la vista solicitada
       const view = $(`#view-${viewName}`);
       const navItem = $(`.nav-item[data-view="${viewName}"]`);
       if (view) view.classList.add('active');
       if (navItem) navItem.classList.add('active');
 
-      // Actualizar título del topbar
       const titles = {
         'dashboard': { icon: 'layout-dashboard', text: 'Inicio' },
         'institutions': { icon: 'building-2', text: 'Instituciones' },
@@ -1781,8 +1687,6 @@
       lucide.createIcons();
 
       state.currentView = viewName;
-
-      // Cerrar sidebar en móvil
       $('#sidebar').classList.remove('open');
     }
 
@@ -1816,15 +1720,11 @@
        EVENT LISTENERS
        ============================================ */
     function initEventListeners() {
-      // Login
       $('#btnGoogleLogin').addEventListener('click', loginWithGoogle);
       $('#btnLocalLogin').addEventListener('click', loginLocal);
-
-      // Logout
       $('#btnLogout').addEventListener('click', logout);
       $('#btnLogoutSettings').addEventListener('click', logout);
 
-      // Navegación
       $$('.nav-item, [data-view]').forEach(el => {
         el.addEventListener('click', (e) => {
           const view = el.getAttribute('data-view');
@@ -1832,31 +1732,21 @@
         });
       });
 
-      // Tema
       $('#btnTheme').addEventListener('click', toggleTheme);
-
-      // Menú móvil
       $('#menuToggle').addEventListener('click', () => {
         $('#sidebar').classList.toggle('open');
       });
 
-      // Nuevas instituciones / materias
       $('#btnNewInstitution')?.addEventListener('click', () => {
-        showToast('Funcionalidad disponible en Fase 2', 'info');
-      });
-      $('#btnNewInstitutionEmpty')?.addEventListener('click', () => {
         showToast('Funcionalidad disponible en Fase 2', 'info');
       });
       $('#btnNewSubject')?.addEventListener('click', () => {
         showToast('Funcionalidad disponible en Fase 2', 'info');
       });
-
-      // Export
       $('#btnExport')?.addEventListener('click', () => {
         showToast('Exportación PDF disponible en Fase 4', 'info');
       });
 
-      // Configuración de colores
       $('#colorPrimary')?.addEventListener('input', (e) => {
         document.documentElement.style.setProperty('--color-primary', e.target.value);
       });
@@ -1872,16 +1762,10 @@
        INICIALIZACIÓN
        ============================================ */
     document.addEventListener('DOMContentLoaded', () => {
-      // Renderizar iconos
       lucide.createIcons();
-
-      // Aplicar tema guardado
       applyTheme(state.theme);
-
-      // Event listeners
       initEventListeners();
 
-      // Listener de autenticación
       auth.onAuthStateChanged((user) => {
         if (user && !state.isLocalMode) {
           state.user = user;
@@ -1890,8 +1774,8 @@
       });
 
       console.log('🎓 Agenda Docente Profesional - Fase 1 cargada');
-      console.log('⚠️ Configura firebaseConfig con tus credenciales para activar la nube');
+      console.log('✅ Firebase conectado:', firebaseConfig.projectId);
     });
   </script>
 </body>
-        </html>
+</html>
