@@ -366,43 +366,146 @@ function applySettings() {
 
 // ============ EMPIEZA AQUÍ ============
 function renderStartHere() {
-  return `<div class="section-header"><div><h1> Empieza aquí</h1><p class="subtitle">Configura tu año escolar en 3 pasos</p></div></div>
-  <div class="card"><div class="card-header"><h3><i data-lucide="calendar"></i> Paso 1: Elige tu modelo de curso</h3></div><div class="card-body">
-    <div class="grid-2">
-      <div class="item-card ${state.settings.courseModel === 'natural' ? 'active' : ''}" onclick="updateSetting('courseModel', 'natural')" style="cursor:pointer; text-align:center;">
-        <i data-lucide="globe" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
-        <h4>Año Natural</h4><p style="font-size:0.85rem;color:var(--text-muted)">Enero – Diciembre</p>
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Empieza aquí</h1>
+        <p class="subtitle">Configura tu año escolar en 3 pasos</p>
       </div>
-      <div class="item-card ${state.settings.courseModel === 'european' ? 'active' : ''}" onclick="updateSetting('courseModel', 'european')" style="cursor:pointer; text-align:center;">
-        <i data-lucide="map" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
-        <h4>Curso Europeo</h4><p style="font-size:0.85rem;color:var(--text-muted)">Septiembre – Junio</p>
-      </div>
-      <div class="item-card ${state.settings.courseModel === 'south' ? 'active' : ''}" onclick="updateSetting('courseModel', 'south')" style="cursor:pointer; text-align:center;">
-        <i data-lucide="sun" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
-        <h4>Hemisferio Sur</h4><p style="font-size:0.85rem;color:var(--text-muted)">Febrero – Diciembre</p>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-secondary" onclick="openCourseSelector()">
+          <i data-lucide="folder-open"></i> Abrir otro curso
+        </button>
+        <button class="btn btn-primary" onclick="saveCurrentCourse()">
+          <i data-lucide="save"></i> Guardar
+        </button>
       </div>
     </div>
-  </div></div>
-  <div class="card"><div class="card-header"><h3><i data-lucide="calendar-check"></i> Paso 2: Fecha del primer lunes</h3></div><div class="card-body">
-    <div class="form-grid" style="padding:0">
-      <div class="form-group"><label>Primer lunes de la semana 1</label><input type="date" value="${state.settings.firstMonday || ''}" onchange="updateSetting('firstMonday', this.value)"></div>
-      <div class="form-group"><label>Modelo seleccionado</label><input type="text" value="${state.settings.courseModel === 'natural' ? 'Año Natural' : state.settings.courseModel === 'european' ? 'Curso Europeo' : 'Hemisferio Sur'}" readonly style="background:var(--bg)"></div>
+    
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="calendar"></i> Paso 1: Elige tu modelo de curso</h3></div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="item-card ${state.settings.courseModel === 'natural' ? 'active' : ''}" onclick="updateSetting('courseModel', 'natural')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="globe" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Año Natural</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Enero – Diciembre</p>
+          </div>
+          <div class="item-card ${state.settings.courseModel === 'european' ? 'active' : ''}" onclick="updateSetting('courseModel', 'european')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="map" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Curso Europeo</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Septiembre – Junio</p>
+          </div>
+          <div class="item-card ${state.settings.courseModel === 'south' ? 'active' : ''}" onclick="updateSetting('courseModel', 'south')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="sun" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Hemisferio Sur</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Febrero – Diciembre</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted)"> Al establecer el primer lunes, las 53 semanas y los 12 meses se generarán automáticamente.</p>
-  </div></div>
-  <div class="card"><div class="card-header"><h3><i data-lucide="building-2"></i> Paso 3: Crea tu primera institución</h3></div><div class="card-body">
-    ${state.institutions.length === 0 ? `<div class="empty-state"><p>Aún no tienes instituciones.</p><button class="btn btn-primary" onclick="navigateTo('institutions'); setTimeout(() => openInstitutionModal(), 100)"><i data-lucide="plus"></i> Crear institución</button></div>` : `
-    <p style="margin-bottom:1rem">Tienes <strong>${state.institutions.length}</strong> institución(es).</p>
-    <div style="display:flex; flex-direction:column; gap:0.75rem;">
-      ${state.institutions.map(inst => `<div style="background:var(--bg); padding:1rem; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
-        <div><strong>${inst.name}</strong><p style="font-size:0.85rem; color:var(--text-muted)">${inst.cycle || 'Sin ciclo'} · ${inst.level || 'Sin nivel'}</p></div>
-        <button class="btn btn-sm" onclick="setActiveInstitution('${inst.id}'); navigateTo('subjects')"><i data-lucide="arrow-right"></i> Ir a materias</button>
-      </div>`).join('')}
-    </div>`}
-  </div></div>`;
+
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="calendar-check"></i> Paso 2: Fecha del primer lunes</h3></div>
+      <div class="card-body">
+        <div class="form-grid" style="padding:0">
+          <div class="form-group">
+            <label>Primer lunes de la semana 1</label>
+            <input type="date" value="${state.settings.firstMonday || ''}" onchange="updateSetting('firstMonday', this.value)">
+          </div>
+          <div class="form-group">
+            <label>Modelo seleccionado</label>
+            <input type="text" value="${state.settings.courseModel === 'natural' ? 'Año Natural' : state.settings.courseModel === 'european' ? 'Curso Europeo' : 'Hemisferio Sur'}" readonly style="background:var(--bg)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="building-2"></i> Paso 3: Crea tu primera institución</h3></div>
+      <div class="card-body">
+        ${state.institutions.length === 0 ? `
+          <div class="empty-state">
+            <p>Aún no tienes instituciones configuradas.</p>
+            <button class="btn btn-primary" onclick="navigateTo('institutions'); setTimeout(() => openInstitutionModal(), 100)">
+              <i data-lucide="plus"></i> Crear institución
+            </button>
+          </div>
+        ` : `
+          <p style="margin-bottom:1rem">Tienes <strong>${state.institutions.length}</strong> institución(es) creada(s).</p>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            ${state.institutions.map(inst => `
+              <div style="background:var(--bg); padding:1rem; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong>${inst.name}</strong>
+                  <p style="font-size:0.85rem; color:var(--text-muted)">${inst.cycle || 'Sin ciclo'} · ${inst.level || 'Sin nivel'}</p>
+                </div>
+                <button class="btn btn-sm" onclick="setActiveInstitution('${inst.id}'); navigateTo('subjects')">
+                  <i data-lucide="arrow-right"></i> Ir a materias
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
 }
 
-// ============ DASHBOARD ============
+// Nuevas funciones para la página inicial
+window.openCourseSelector = () => {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'courseSelectorModal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Abrir otro curso</h2>
+        <button class="icon-btn" onclick="closeModal('courseSelectorModal')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="card-body">
+        <p style="margin-bottom:1rem">Selecciona o crea un nuevo año escolar:</p>
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <button class="btn btn-secondary" onclick="createNewCourse()" style="justify-content:flex-start;">
+            <i data-lucide="plus-circle"></i> Crear nuevo curso
+          </button>
+          <button class="btn btn-secondary" onclick="loadExistingCourse()" style="justify-content:flex-start;">
+            <i data-lucide="folder"></i> Cargar curso existente
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.createNewCourse = () => {
+  closeModal('courseSelectorModal');
+  state.settings = {
+    ...state.settings,
+    courseModel: 'natural',
+    firstMonday: '',
+    institutions: [],
+    students: [],
+    events: []
+  };
+  saveData('settings/main', state.settings);
+  renderActiveSection();
+  showNotification('Nuevo curso creado', 'success');
+};
+
+window.loadExistingCourse = () => {
+  closeModal('courseSelectorModal');
+  showNotification('Función de carga en desarrollo', 'info');
+};
+
+window.saveCurrentCourse = async () => {
+  await saveData('settings/main', state.settings);
+  await saveData('institutions/batch', { institutions: state.institutions });
+  showNotification('Curso guardado correctamente', 'success');
+};
+  // ============ DASHBOARD ============
 function renderDashboard() {
   const today = new Date();
   const totalStudents = state.students.length;
@@ -537,6 +640,157 @@ window.setActiveInstitution = (id) => { state.activeInstitution = id; renderActi
 
 // ============ MATERIAS ============
 function renderSubjects() {
+  // Función para abrir modal de alta rápida de alumnos desde materia
+window.openQuickStudentList = (subjectId) => {
+  const inst = state.institutions.find(i => i.subjects?.some(s => s.id === subjectId));
+  const subject = inst?.subjects?.find(s => s.id === subjectId);
+  if (!subject) return;
+  
+  const existingStudents = state.students.filter(s => s.group === subject.group && s.institutionId === subject.institutionId);
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'quickStudentListModal';
+  modal.innerHTML = `
+    <div class="modal-content large">
+      <div class="modal-header">
+        <div>
+          <h2>Lista de alumnos - ${subject.name}</h2>
+          <p style="font-size:0.9rem; color:var(--text-muted);">Grupo: ${subject.group||'N/A'}</p>
+        </div>
+        <button class="icon-btn" onclick="closeModal('quickStudentListModal')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="card-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <p style="font-size:0.9rem; color:var(--text-muted);">${existingStudents.length} alumnos registrados</p>
+          <button class="btn btn-primary btn-sm" onclick="addQuickStudentRow()">
+            <i data-lucide="plus"></i> Agregar fila
+          </button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="quickStudentTable">
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>Nombre completo</th>
+                <th>Matrícula</th>
+                <th>NEAE</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="quickStudentTableBody">
+              ${existingStudents.map((s, i) => `
+                <tr data-student-id="${s.id}">
+                  <td>${String(i+1).padStart(2, '0')}</td>
+                  <td><input type="text" value="${s.name||''}" onchange="updateQuickStudent('${s.id}', 'name', this.value)" style="width:100%;"></td>
+                  <td><input type="text" value="${s.enrollment||''}" onchange="updateQuickStudent('${s.id}', 'enrollment', this.value)" style="width:100px;"></td>
+                  <td>
+                    <select onchange="updateQuickStudent('${s.id}', 'neae', this.value)">
+                      <option value="Sin necesidades específicas" ${s.neae==='Sin necesidades específicas'?'selected':''}>No</option>
+                      <option value="Apoyo especializado" ${s.neae==='Apoyo especializado'?'selected':''}>Apoyo especializado</option>
+                      <option value="Adaptación curricular" ${s.neae==='Adaptación curricular'?'selected':''}>Adaptación curricular</option>
+                      <option value="Altas capacidades" ${s.neae==='Altas capacidades'?'selected':''}>Altas capacidades</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button class="icon-btn" onclick="openStudentModal('${s.id}'); closeModal('quickStudentListModal');" title="Ver ficha completa"><i data-lucide="eye"></i></button>
+                    <button class="icon-btn danger" onclick="deleteQuickStudent('${s.id}')" title="Eliminar"><i data-lucide="trash-2"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:1.5rem; padding:1rem; background:var(--primary-light); border-radius:var(--radius-sm); border-left:4px solid var(--primary);">
+          <p style="font-size:0.85rem; color:var(--primary);">
+            <i data-lucide="info" style="width:16px; height:16px; vertical-align:middle;"></i>
+            <strong>Tip:</strong> Los alumnos se guardan automáticamente. Para ver la ficha completa con familia, salud y más detalles, haz click en el ícono de ojo.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('quickStudentListModal')">Cerrar</button>
+        <button class="btn btn-primary" onclick="saveQuickStudentList('${subjectId}')">
+          <i data-lucide="save"></i> Guardar lista
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.addQuickStudentRow = () => {
+  const tbody = document.getElementById('quickStudentTableBody');
+  const rowCount = tbody.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${String(rowCount).padStart(2, '0')}</td>
+    <td><input type="text" placeholder="Nombre del alumno" class="new-student-name" style="width:100%;"></td>
+    <td><input type="text" placeholder="Matrícula" class="new-student-enrollment" style="width:100px;"></td>
+    <td>
+      <select class="new-student-neae">
+        <option value="Sin necesidades específicas">No</option>
+        <option value="Apoyo especializado">Apoyo especializado</option>
+        <option value="Adaptación curricular">Adaptación curricular</option>
+        <option value="Altas capacidades">Altas capacidades</option>
+      </select>
+    </td>
+    <td>
+      <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()"><i data-lucide="trash-2"></i></button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+};
+
+window.updateQuickStudent = async (studentId, field, value) => {
+  const student = state.students.find(s => s.id === studentId);
+  if (student) {
+    student[field] = value;
+    await saveData('students', student, studentId);
+  }
+};
+
+window.deleteQuickStudent = async (studentId) => {
+  if (confirm('¿Eliminar este alumno?')) {
+    await deleteData('students', studentId);
+    const row = document.querySelector(`tr[data-student-id="${studentId}"]`);
+    if (row) row.remove();
+  }
+};
+
+window.saveQuickStudentList = async (subjectId) => {
+  const inst = state.institutions.find(i => i.subjects?.some(s => s.id === subjectId));
+  const subject = inst?.subjects?.find(s => s.id === subjectId);
+  if (!subject) return;
+  
+  const newRows = document.querySelectorAll('#quickStudentTableBody tr:not([data-student-id])');
+  let savedCount = 0;
+  
+  for (const row of newRows) {
+    const name = row.querySelector('.new-student-name')?.value?.trim();
+    if (name) {
+      const enrollment = row.querySelector('.new-student-enrollment')?.value || '';
+      const neae = row.querySelector('.new-student-neae')?.value || 'Sin necesidades específicas';
+      
+      const studentData = {
+        name: name,
+        enrollment: enrollment,
+        neae: neae,
+        group: subject.group,
+        institutionId: subject.institutionId,
+        createdAt: serverTimestamp()
+      };
+      
+      await saveData('students', studentData);
+      savedCount++;
+    }
+  }
+  
+  closeModal('quickStudentListModal');
+  showNotification(`${savedCount} alumno(s) agregado(s)`, 'success');
+  renderActiveSection();
+};
   const activeInst = state.institutions.find(i => i.id === state.activeInstitution);
   const subjects = activeInst?.subjects || [];
   return `<div class="section-header"><div><h1>Materias y Grupos</h1><p class="subtitle">Organiza tus asignaturas</p></div><button class="btn btn-primary" onclick="openSubjectModal()"><i data-lucide="plus"></i>Nueva</button></div>
@@ -672,7 +926,13 @@ function renderDetailedMonthView() {
   return `<div class="month-detailed"><div class="month-detailed-header"><button class="icon-btn" onclick="changeDetailedMonth(-1)"><i data-lucide="chevron-left"></i></button><h3 style="text-transform:capitalize">${monthNames[month]} ${year}</h3><button class="icon-btn" onclick="changeDetailedMonth(1)"><i data-lucide="chevron-right"></i></button></div><div class="month-detailed-grid" style="margin-bottom:0.5rem"><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Lun</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Mar</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Mié</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Jue</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Vie</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Sáb</div><div style="text-align:center;font-size:0.75rem;font-weight:600;color:var(--text-muted)">Dom</div></div><div class="month-detailed-grid">${days}</div></div>`;
 }
 window.changeDetailedMonth = (delta) => { viewState.calendarMonth += delta; if (viewState.calendarMonth > 11) { viewState.calendarMonth = 0; viewState.calendarYear++; } if (viewState.calendarMonth < 0) { viewState.calendarMonth = 11; viewState.calendarYear--; } document.getElementById('calendarView').innerHTML = renderDetailedMonthView(); if (typeof lucide !== 'undefined') lucide.createIcons(); };
-
+function getFilteredEvents() {
+   const filter = document.getElementById('calInstFilter')?.value || '';
+  if (filter) {
+    return state.events.filter(e => e.institutionId === filter);
+  }
+   return state.events;
+}
 function renderDetailedWeekView() {
   const week = viewState.calendarWeek, year = viewState.calendarYear;
   const events = getFilteredEvents();
@@ -683,15 +943,65 @@ function renderDetailedWeekView() {
   const weekDays = [];
   for (let i = 0; i < 7; i++) { const d = new Date(firstMonday); d.setDate(firstMonday.getDate() + i); weekDays.push(d); }
   const dayNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+   const allSubjects = state.institutions.flatMap(i => i.subjects || []);
   return `<div class="week-detailed"><div class="month-detailed-header"><button class="icon-btn" onclick="changeDetailedWeek(-1)"><i data-lucide="chevron-left"></i></button><h3>Semana ${week + 1} · ${weekDays[0].toLocaleDateString('es-ES',{day:'2-digit',month:'short'})} - ${weekDays[6].toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})}</h3><button class="icon-btn" onclick="changeDetailedWeek(1)"><i data-lucide="chevron-right"></i></button></div><div class="week-detailed-grid">${weekDays.map((d, i) => {
     const dateStr = d.toISOString().split('T')[0];
     const dayEvents = events.filter(e => e.date === dateStr);
-    return `<div class="week-detailed-day"><h4>${dayNames[i]}</h4><div class="date">${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})}</div>${dayEvents.map(e => `<div style="font-size:0.75rem;padding:0.375rem;background:${e.color||'var(--primary)'};color:white;border-radius:4px;margin-bottom:0.25rem">${e.time||''} ${e.title}</div>`).join('')}<textarea placeholder="Notas de la semana..." onchange="saveWeekNote(${year},${week},${i},this.value)">${state.settings[`weekNotes_${year}_${week}_${i}`]||''}</textarea></div>`;
-  }).join('')}</div></div>`;
+     return `
+    <div class="week-detailed">
+      <div class="month-detailed-header">
+        <button class="icon-btn" onclick="changeDetailedWeek(-1)"><i data-lucide="chevron-left"></i></button>
+        <h3>Semana ${week + 1} · ${weekDays[0].toLocaleDateString('es-ES',{day:'2-digit',month:'short'})} - ${weekDays[6].toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})}</h3>
+        <button class="icon-btn" onclick="changeDetailedWeek(1)"><i data-lucide="chevron-right"></i></button>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 250px; gap:1rem;">
+        <div class="week-detailed-grid">
+          ${weekDays.map((d, i) => {
+            const dateStr = d.toISOString().split('T')[0];
+            const dayEvents = events.filter(e => e.date === dateStr);
+            return `
+              <div class="week-detailed-day">
+                <h4>${dayNames[i]}</h4>
+                <div class="date">${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})}</div>
+                ${dayEvents.map(e => `
+                  <div style="font-size:0.75rem;padding:0.375rem;background:${e.color||'var(--primary)'};color:white;border-radius:4px;margin-bottom:0.25rem;">
+                    <strong>${e.time||''}</strong> ${e.title}
+                    ${e.institutionName ? `<br><small style="opacity:0.8;">${e.institutionName}</small>` : ''}
+                  </div>
+                `).join('')}
+                <textarea placeholder="Notas de la semana..." onchange="saveWeekNote(${year},${week},${i},this.value)">${state.settings[`weekNotes_${year}_${week}_${i}`]||''}</textarea>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="background:var(--bg); padding:1rem; border-radius:var(--radius-sm);">
+          <h4 style="color:var(--primary); margin-bottom:0.75rem;">
+            <i data-lucide="book-open" style="width:16px; height:16px; vertical-align:middle;"></i>
+            Materias esta semana
+          </h4>
+          ${allSubjects.length === 0 ? '<p style="font-size:0.85rem; color:var(--text-muted);">Sin materias</p>' : `
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+              ${allSubjects.map(sub => {
+                const inst = state.institutions.find(i => i.id === sub.institutionId);
+                const weekEvents = events.filter(e => e.subjectId === sub.id);
+                return `
+                  <div style="background:var(--surface); padding:0.75rem; border-radius:var(--radius-sm); border-left:3px solid ${sub.color||'var(--primary)'};">
+                    <strong style="font-size:0.9rem;">${sub.name}</strong>
+                    <p style="font-size:0.75rem; color:var(--text-muted);">${inst?.name||''} · ${sub.group||''}</p>
+                    <p style="font-size:0.75rem; color:var(--primary);">${weekEvents.length} clases esta semana</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
 }
 window.changeDetailedWeek = (delta) => { viewState.calendarWeek += delta; if (viewState.calendarWeek < 0) { viewState.calendarWeek = 52; viewState.calendarYear--; } if (viewState.calendarWeek > 52) { viewState.calendarWeek = 0; viewState.calendarYear++; } document.getElementById('calendarView').innerHTML = renderDetailedWeekView(); if (typeof lucide !== 'undefined') lucide.createIcons(); };
 window.saveWeekNote = async (year, week, day, value) => { state.settings[`weekNotes_${year}_${week}_${day}`] = value; await saveData('settings/main', state.settings); };
-
+ const allSubjects = state.institutions.flatMap(i => i.subjects || []);z
 window.openEventModal = (date = null) => {
   const modal = document.createElement('div'); modal.className = 'modal active'; modal.id = 'eventModal';
   modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h2>Nuevo evento</h2><button class="icon-btn" onclick="closeModal('eventModal')"><i data-lucide="x"></i></button></div><form onsubmit="saveEvent(event)"><div class="form-grid">
