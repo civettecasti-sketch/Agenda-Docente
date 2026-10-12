@@ -1512,6 +1512,398 @@ window.deletePlanning = async (id) => { if (confirm('¿Eliminar?')) await delete
 
 document.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) e.target.remove(); });
 if (typeof lucide !== 'undefined') lucide.createIcons();
-</script>
+<function renderStartHere() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>🎯 Empieza aquí</h1>
+        <p class="subtitle">Configura tu año escolar en 3 pasos sencillos</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="calendar"></i> Paso 1: Elige tu modelo de curso</h3></div>
+      <div class="card-body">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div class="item-card ${state.settings.courseModel === 'natural' ? 'active' : ''}" onclick="updateSetting('courseModel', 'natural')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="globe" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Año Natural</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Enero – Diciembre</p>
+          </div>
+          <div class="item-card ${state.settings.courseModel === 'european' ? 'active' : ''}" onclick="updateSetting('courseModel', 'european')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="map" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Curso Europeo</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Septiembre – Junio</p>
+          </div>
+          <div class="item-card ${state.settings.courseModel === 'south' ? 'active' : ''}" onclick="updateSetting('courseModel', 'south')" style="cursor:pointer; text-align:center;">
+            <i data-lucide="sun" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+            <h4>Hemisferio Sur</h4>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Febrero – Diciembre</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="calendar-check"></i> Paso 2: Fecha del primer lunes</h3></div>
+      <div class="card-body">
+        <div class="form-grid" style="padding:0">
+          <div class="form-group">
+            <label>Primer lunes de la semana 1</label>
+            <input type="date" value="${state.settings.firstMonday || ''}" onchange="updateSetting('firstMonday', this.value)">
+          </div>
+          <div class="form-group">
+            <label>Modelo seleccionado</label>
+            <input type="text" value="${state.settings.courseModel === 'natural' ? 'Año Natural' : state.settings.courseModel === 'european' ? 'Curso Europeo' : 'Hemisferio Sur'}" readonly style="background:var(--bg)">
+          </div>
+        </div>
+        <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted)">
+          💡 Al establecer el primer lunes, las 53 semanas y los 12 meses se generarán y enlazarán automáticamente en la sección de Calendarios.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="building-2"></i> Paso 3: Crea tu primera institución</h3></div>
+      <div class="card-body">
+        ${state.institutions.length === 0 ? `
+          <div class="empty-state">
+            <p>Aún no tienes instituciones configuradas.</p>
+            <button class="btn btn-primary" onclick="navigateTo('institutions'); setTimeout(() => openInstitutionModal(), 100)">
+              <i data-lucide="plus"></i> Crear institución
+            </button>
+          </div>
+        ` : `
+          <p style="margin-bottom:1rem">Tienes <strong>${state.institutions.length}</strong> institución(es) creada(s).</p>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            ${state.institutions.map(inst => `
+              <div style="background:var(--bg); padding:1rem; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong>${inst.name}</strong>
+                  <p style="font-size:0.85rem; color:var(--text-muted)">${inst.cycle || 'Sin ciclo'} · ${inst.level || 'Sin nivel'}</p>
+                </div>
+                <button class="btn btn-sm" onclick="setActiveInstitution('${inst.id}'); navigateTo('subjects')">
+                  <i data-lucide="arrow-right"></i> Ir a materias
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+// --- ACTUALIZACIÓN: Modal de Institución con Horario Semanal ---
+window.openInstitutionModal = (id = null) => {
+  const inst = id ? state.institutions.find(i => i.id === id) : null;
+  const schedule = inst?.weeklySchedule || {};
+  const sessions = 8;
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'institutionModal';
+  modal.innerHTML = `
+    <div class="modal-content xlarge">
+      <div class="modal-header">
+        <h2>${id ? 'Editar' : 'Nueva'} institución</h2>
+        <button class="icon-btn" onclick="closeModal('institutionModal')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="section-tabs" style="padding: 1rem 1.5rem 0;">
+        <button type="button" class="tab-btn active" onclick="switchInstTab('info', this)">Información</button>
+        <button type="button" class="tab-btn" onclick="switchInstTab('schedule', this)">Horario Semanal</button>
+      </div>
+      
+      <form id="institutionForm" onsubmit="saveInstitution(event, '${id || ''}')">
+        <div id="inst-tab-info" class="form-tab-content active" style="display:block">
+          <div class="form-grid">
+            <div class="form-group full"><label>Nombre de la institución *</label><input type="text" id="inst_name" required value="${inst?.name || ''}"></div>
+            <div class="form-group"><label>Ciclo escolar</label><input type="text" id="inst_cycle" value="${inst?.cycle || ''}" placeholder="2025-2026"></div>
+            <div class="form-group"><label>Nivel / Grado</label><input type="text" id="inst_level" value="${inst?.level || ''}"></div>
+            <div class="form-group full"><label>Dirección</label><input type="text" id="inst_address" value="${inst?.address || ''}"></div>
+            <div class="form-group"><label>Coordinación</label><input type="text" id="inst_coordination" value="${inst?.coordination || ''}"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" id="inst_phone" value="${inst?.phone || ''}"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="inst_email" value="${inst?.email || ''}"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="inst_color" value="${inst?.color || '#4F46E5'}"></div>
+            <div class="form-group"><label>Fecha inicio</label><input type="date" id="inst_startDate" value="${inst?.startDate || ''}"></div>
+            <div class="form-group"><label>Fecha fin</label><input type="date" id="inst_endDate" value="${inst?.endDate || ''}"></div>
+            <div class="form-group full"><label>Notas</label><textarea id="inst_notes" rows="3">${inst?.notes || ''}</textarea></div>
+          </div>
+        </div>
+        
+        <div id="inst-tab-schedule" class="form-tab-content" style="display:none">
+          <div style="padding:1.5rem; overflow-x:auto;">
+            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Introduce la materia y el grupo para cada sesión. Este horario servirá de referencia general del centro.</p>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sesión</th>
+                  ${days.map(d => `<th>${d}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${Array.from({ length: sessions }, (_, i) => `
+                  <tr>
+                    <td style="font-weight:600">${i + 1}ª</td>
+                    ${days.map(d => {
+                      const key = `${d}_${i}`;
+                      const val = schedule[key] || '';
+                      return `<td><input type="text" class="sched-input" data-key="${key}" value="${val}" placeholder="Materia / Grupo" style="width:100%; border:none; background:transparent; text-align:center;"></td>`;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          ${id ? `<button type="button" class="btn btn-danger" onclick="confirmDeleteInstitution('${id}'); closeModal('institutionModal')" style="margin-right:auto"><i data-lucide="trash-2"></i>Eliminar</button>` : ''}
+          <button type="button" class="btn btn-secondary" onclick="closeModal('institutionModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.switchInstTab = (tab, btn) => {
+  document.querySelectorAll('#institutionModal .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#institutionModal .form-tab-content').forEach(c => c.style.display = 'none');
+  btn.classList.add('active');
+  document.getElementById(`inst-tab-${tab}`).style.display = 'block';
+};
+
+window.saveInstitution = async (e, id) => {
+  e.preventDefault();
+  
+  // Recoger horario semanal
+  const scheduleInputs = document.querySelectorAll('.sched-input');
+  const weeklySchedule = {};
+  scheduleInputs.forEach(input => {
+    if (input.value.trim() !== '') {
+      weeklySchedule[input.dataset.key] = input.value.trim();
+    }
+  });
+
+  const data = {
+    name: document.getElementById('inst_name').value,
+    cycle: document.getElementById('inst_cycle').value,
+    level: document.getElementById('inst_level').value,
+    address: document.getElementById('inst_address').value,
+    coordination: document.getElementById('inst_coordination').value,
+    phone: document.getElementById('inst_phone').value,
+    email: document.getElementById('inst_email').value,
+    color: document.getElementById('inst_color').value,
+    startDate: document.getElementById('inst_startDate').value,
+    endDate: document.getElementById('inst_endDate').value,
+    notes: document.getElementById('inst_notes').value,
+    weeklySchedule: weeklySchedule, // <-- NUEVO: Guarda el horario
+    subjects: id ? (state.institutions.find(i => i.id === id)?.subjects || []) : [],
+    subjectCount: id ? (state.institutions.find(i => i.id === id)?.subjects?.length || 0) : 0,
+    updatedAt: serverTimestamp()
+  };
+  
+  await saveData('institutions', data, id || undefined);
+  closeModal('institutionModal');
+};
+
+// --- ACTUALIZACIÓN: Modal de Materia con Enlace Automático al Calendario ---
+window.openSubjectModal = (id = null) => {
+  const activeInst = state.institutions.find(i => i.id === state.activeInstitution);
+  const subjects = activeInst?.subjects || [];
+  const sub = id ? subjects.find(s => s.id === id) : null;
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const schedule = sub?.schedule || [{ day: 'Lunes', startTime: '08:00', endTime: '09:00' }];
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'subjectModal';
+  modal.innerHTML = `
+    <div class="modal-content xlarge">
+      <div class="modal-header">
+        <h2>${id ? 'Editar' : 'Nueva'} materia</h2>
+        <button class="icon-btn" onclick="closeModal('subjectModal')"><i data-lucide="x"></i></button>
+      </div>
+      <form onsubmit="saveSubject(event, '${id || ''}')">
+        <div class="section-tabs" style="padding:1rem 1.5rem 0">
+          <button type="button" class="tab-btn active" onclick="switchSubjectFormTab('info', this)">Información</button>
+          <button type="button" class="tab-btn" onclick="switchSubjectFormTab('schedule', this)">Horarios y Días</button>
+        </div>
+        
+        <div id="sft-info" class="form-tab-content active" style="display:block">
+          <div class="form-grid">
+            <div class="form-group full"><label>Nombre de la materia *</label><input type="text" id="sub_name" required value="${sub?.name || ''}"></div>
+            <div class="form-group">
+              <label>Institución *</label>
+              <select id="sub_institution" required>
+                <option value="">Seleccionar</option>
+                ${state.institutions.map(i => `<option value="${i.id}" ${i.id === (sub?.institutionId || state.activeInstitution) ? 'selected' : ''}>${i.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label>Grupo</label><input type="text" id="sub_group" value="${sub?.group || ''}" placeholder="1A, 2B..."></div>
+            <div class="form-group"><label>Aula</label><input type="text" id="sub_classroom" value="${sub?.classroom || ''}"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="sub_color" value="${sub?.color || '#4F46E5'}"></div>
+            <div class="form-group"><label>Fecha de inicio</label><input type="date" id="sub_startDate" value="${sub?.startDate || ''}"></div>
+            <div class="form-group"><label>Fecha de fin</label><input type="date" id="sub_endDate" value="${sub?.endDate || ''}"></div>
+            <div class="form-group full"><label>Descripción</label><textarea id="sub_description" rows="3">${sub?.description || ''}</textarea></div>
+          </div>
+        </div>
+        
+        <div id="sft-schedule" class="form-tab-content" style="display:none">
+          <div style="padding:1.5rem">
+            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">
+              Define los días y horarios de esta materia. <strong>Al guardar, se crearán eventos automáticos</strong> en el calendario (vista anual, mensual y semanal) enlazados a esta materia y su color.
+            </p>
+            <div id="scheduleList">
+              ${schedule.map((s, i) => `
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem; padding:0.75rem; background:var(--bg); border-radius:var(--radius-sm)">
+                  <select class="sched-day" style="flex:1; padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+                    ${days.map(d => `<option value="${d}" ${s.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+                  </select>
+                  <input type="time" class="sched-start" value="${s.startTime || '08:00'}" style="padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+                  <input type="time" class="sched-end" value="${s.endTime || '09:00'}" style="padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+                  <button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addScheduleRow()"><i data-lucide="plus"></i> Agregar horario</button>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          ${id ? `<button type="button" class="btn btn-danger" onclick="deleteSubject('${id}'); closeModal('subjectModal')" style="margin-right:auto"><i data-lucide="trash-2"></i>Eliminar</button>` : ''}
+          <button type="button" class="btn btn-secondary" onclick="closeModal('subjectModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.switchSubjectFormTab = (tab, btn) => {
+  document.querySelectorAll('#subjectModal .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#subjectModal .form-tab-content').forEach(c => c.style.display = 'none');
+  btn.classList.add('active');
+  document.getElementById(`sft-${tab}`).style.display = 'block';
+};
+
+window.addScheduleRow = () => {
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const list = document.getElementById('scheduleList');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; gap:0.5rem; margin-bottom:0.75rem; padding:0.75rem; background:var(--bg); border-radius:var(--radius-sm)';
+  row.innerHTML = `
+    <select class="sched-day" style="flex:1; padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+      ${days.map(d => `<option value="${d}">${d}</option>`).join('')}
+    </select>
+    <input type="time" class="sched-start" value="08:00" style="padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+    <input type="time" class="sched-end" value="09:00" style="padding:0.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); color:var(--text)">
+    <button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button>
+  `;
+  list.appendChild(row);
+};
+
+window.saveSubject = async (e, id) => {
+  e.preventDefault();
+  const institutionId = document.getElementById('sub_institution').value;
+  if (!institutionId) {
+    showNotification('Selecciona una institución', 'error');
+    return;
+  }
+  
+  const scheduleRows = document.querySelectorAll('#scheduleList > div');
+  const schedule = Array.from(scheduleRows).map(row => ({
+    day: row.querySelector('.sched-day').value,
+    startTime: row.querySelector('.sched-start').value,
+    endTime: row.querySelector('.sched-end').value
+  }));
+  
+  const subjectData = {
+    id: id || `sub_${Date.now()}`,
+    name: document.getElementById('sub_name').value,
+    institutionId: institutionId,
+    group: document.getElementById('sub_group').value,
+    classroom: document.getElementById('sub_classroom').value,
+    color: document.getElementById('sub_color').value,
+    startDate: document.getElementById('sub_startDate').value,
+    endDate: document.getElementById('sub_endDate').value,
+    description: document.getElementById('sub_description').value,
+    schedule: schedule,
+    studentCount: id ? (state.institutions.find(i => i.id === institutionId)?.subjects?.find(s => s.id === id)?.studentCount || 0) : 0
+  };
+  
+  const inst = state.institutions.find(i => i.id === institutionId);
+  const subjects = inst?.subjects || [];
+  let updatedSubjects;
+  if (id) {
+    updatedSubjects = subjects.map(s => s.id === id ? { ...s, ...subjectData } : s);
+  } else {
+    updatedSubjects = [...subjects, subjectData];
+  }
+  
+  await saveData('institutions', { 
+    subjects: updatedSubjects, 
+    subjectCount: updatedSubjects.length,
+    updatedAt: serverTimestamp() 
+  }, institutionId);
+  
+  // 🔗 ENLACE AUTOMÁTICO AL CALENDARIO
+  await createRecurringEvents(subjectData, institutionId);
+  
+  closeModal('subjectModal');
+  showNotification('Materia guardada y eventos creados en el calendario', 'success');
+};
+
+// Función que crea los eventos recurrentes en Firestore
+async function createRecurringEvents(subject, institutionId) {
+  const inst = state.institutions.find(i => i.id === institutionId);
+  if (!subject.schedule?.length || !subject.startDate || !subject.endDate) return;
+  
+  const startDate = new Date(subject.startDate);
+  const endDate = new Date(subject.endDate);
+  
+  // 1. Eliminar eventos previos de esta materia para evitar duplicados al editar
+  const existingEvents = state.events.filter(e => e.subjectId === subject.id);
+  for (const evt of existingEvents) {
+    await deleteDoc(doc(db, `users/${state.user.uid}/events`, evt.id));
+  }
+  
+  const promises = [];
+  const current = new Date(startDate);
+  
+  // 2. Iterar día por día entre fecha inicio y fin
+  while (current <= endDate) {
+    const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][current.getDay()];
+    const scheduleForDay = subject.schedule.find(s => s.day === dayName);
+    
+    if (scheduleForDay) {
+      const dateStr = current.toISOString().split('T')[0];
+      promises.push(addDoc(collection(db, `users/${state.user.uid}/events`), {
+        title: `${subject.name} - ${subject.group || 'Grupo'}`,
+        date: dateStr,
+        time: scheduleForDay.startTime,
+        endTime: scheduleForDay.endTime,
+        type: 'Clase',
+        subjectId: subject.id,
+        subjectName: subject.name,
+        institutionId: institutionId,
+        institutionName: inst?.name || '',
+        color: subject.color || '#4F46E5',
+        description: `Clase programada de ${subject.name}`,
+        createdAt: serverTimestamp()
+      }));
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  await Promise.all(promises);
+}
+  /script>
 </body>
 </html>
