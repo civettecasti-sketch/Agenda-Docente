@@ -337,6 +337,8 @@ window.navigateTo = (section, subSection = null) => {
 
 function renderActiveSection() {
   const content = document.getElementById('mainContent');
+   const renderers = {
+    'startHere': renderStartHere,
   const renderers = { 'dashboard': renderDashboard, 'year': renderYear, 'institutions': renderInstitutions, 'subjects': renderSubjects, 'calendar': renderCalendar, 'specialDays': renderSpecialDays, 'students': renderStudents, 'classes': renderClasses, 'evaluation': renderEvaluation, 'subjectDetails': renderSubjectDetails, 'planning': renderPlanning, 'families': renderFamilies, 'staff': renderStaff, 'wellness': renderWellness, 'training': renderTraining, 'settings': renderSettings };
   const renderer = renderers[state.currentSection] || renderDashboard;
   content.innerHTML = renderer();
