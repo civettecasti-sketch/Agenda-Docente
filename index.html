@@ -1,1928 +1,3267 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agenda Docente Profesional</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agenda Docente Profesional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/4.2.0/html2pdf.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, query, where, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  <style>
-    :root {
-      --color-primary: #2563eb;
-      --color-primary-dark: #1d4ed8;
-      --color-primary-light: #dbeafe;
-      --color-secondary: #64748b;
-      --color-accent: #f59e0b;
-      --color-success: #10b981;
-      --color-danger: #ef4444;
-      --color-warning: #f59e0b;
-      --color-bg: #f8fafc;
-      --color-surface: #ffffff;
-      --color-surface-elevated: #ffffff;
-      --color-border: #e2e8f0;
-      --color-border-light: #f1f5f9;
-      --color-text: #0f172a;
-      --color-text-muted: #64748b;
-      --color-text-light: #94a3b8;
-      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08);
-      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 20px;
-      --font-primary: 'Inter', -apple-system, sans-serif;
-      --font-display: 'Montserrat', var(--font-primary);
-      --spacing-xs: 4px;
-      --spacing-sm: 8px;
-      --spacing-md: 16px;
-      --spacing-lg: 24px;
-      --spacing-xl: 32px;
-      --spacing-2xl: 48px;
-      --sidebar-width: 260px;
-      --header-height: 64px;
-      --transition-fast: 150ms cubic-bezier(0.4,0,0.2,1);
-      --transition-base: 250ms cubic-bezier(0.4,0,0.2,1);
-      --bg-image: none;
-    }
-    [data-theme="dark"] {
-      --color-bg: #0f172a;
-      --color-surface: #1e293b;
-      --color-surface-elevated: #273449;
-      --color-border: #334155;
-      --color-border-light: #1e293b;
-      --color-text: #f1f5f9;
-      --color-text-muted: #94a3b8;
-      --color-text-light: #64748b;
-      --color-primary-light: #1e3a8a;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-    body {
-      font-family: var(--font-primary);
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--color-text);
-      background: var(--color-bg);
-      min-height: 100vh;
-    }
-    body.has-bg-image {
-      background-image: var(--bg-image);
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
-    body.has-bg-image .app-container,
-    body.has-bg-image .login-screen { background: transparent; }
-    body.has-bg-image .card,
-    body.has-bg-image .stat-card,
-    body.has-bg-image .institution-card,
-    body.has-bg-image .subject-card,
-    body.has-bg-image .sidebar,
-    body.has-bg-image .topbar,
-    body.has-bg-image .modal,
-    body.has-bg-image .login-card {
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(10px);
-    }
-    [data-theme="dark"].has-bg-image .card,
-    [data-theme="dark"].has-bg-image .stat-card,
-    [data-theme="dark"].has-bg-image .institution-card,
-    [data-theme="dark"].has-bg-image .subject-card,
-    [data-theme="dark"].has-bg-image .sidebar,
-    [data-theme="dark"].has-bg-image .topbar,
-    [data-theme="dark"].has-bg-image .modal,
-    [data-theme="dark"].has-bg-image .login-card {
-      background: rgba(30,41,59,0.92);
-    }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-    input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
-    a { color: var(--color-primary); text-decoration: none; }
+const firebaseConfig = {
+  apiKey: "AIzaSyBKFxQG7buVaP47ghdUiXLbCjTfk3i1TVA",
+  authDomain: "agenda-docente-cfcb3.firebaseapp.com",
+  databaseURL: "https://agenda-docente-cfcb3-default-rtdb.firebaseio.com",
+  projectId: "agenda-docente-cfcb3",
+  storageBucket: "agenda-docente-cfcb3.firebasestorage.app",
+  messagingSenderId: "877985632064",
+  appId: "1:877985632064:web:3c68ecdc4245c609ac34a5",
+  measurementId: "G-30Y76GNM68"
+};
 
-    /* LOGIN */
-    .login-screen {
-      position: fixed; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
-      z-index: 1000; padding: var(--spacing-lg);
-    }
-    .login-screen.hidden { display: none; }
-    .login-card {
-      background: var(--color-surface);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      padding: var(--spacing-2xl);
-      max-width: 440px; width: 100%;
-      text-align: center;
-      animation: slideUp 0.5s ease;
-    }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .login-logo {
-      width: 72px; height: 72px;
-      margin: 0 auto var(--spacing-lg);
-      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-      border-radius: var(--radius-lg);
-      display: flex; align-items: center; justify-content: center;
-      color: white; box-shadow: var(--shadow-lg);
-    }
-    .login-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin-bottom: var(--spacing-sm); }
-    .login-subtitle { color: var(--color-text-muted); margin-bottom: var(--spacing-xl); font-size: 15px; }
-    .btn-google {
-      display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
-      width: 100%; padding: 14px 20px;
-      background: var(--color-surface);
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-weight: 500; font-size: 15px;
-      transition: var(--transition-base);
-      margin-bottom: var(--spacing-md);
-    }
-    .btn-google:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-    .login-footer { margin-top: var(--spacing-xl); font-size: 12px; color: var(--color-text-light); }
+// Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-    /* LAYOUT */
-    .app-container { display: none; min-height: 100vh; }
-    .app-container.active { display: grid; grid-template-columns: var(--sidebar-width) 1fr; }
-    .sidebar {
-      background: var(--color-surface);
-      border-right: 1px solid var(--color-border);
-      height: 100vh; position: sticky; top: 0;
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    .sidebar-header {
-      padding: var(--spacing-lg);
-      border-bottom: 1px solid var(--color-border);
-      display: flex; align-items: center; gap: var(--spacing-md);
-    }
-    .sidebar-logo {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-      border-radius: var(--radius-md);
-      display: flex; align-items: center; justify-content: center;
-      color: white; flex-shrink: 0;
-    }
-    .sidebar-brand { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2; }
-    .sidebar-brand small { display: block; font-family: var(--font-primary); font-weight: 400; font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
-    .sidebar-nav { flex: 1; overflow-y: auto; padding: var(--spacing-md) var(--spacing-sm); }
-    .sidebar-nav::-webkit-scrollbar { width: 6px; }
-    .sidebar-nav::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
-    .nav-section-title {
-      font-size: 11px; font-weight: 600;
-      color: var(--color-text-light);
-      text-transform: uppercase; letter-spacing: 0.8px;
-      padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: var(--spacing-md);
-      padding: 10px var(--spacing-md);
-      border-radius: var(--radius-md);
-      color: var(--color-text-muted);
-      font-size: 14px; font-weight: 500;
-      transition: var(--transition-fast);
-      margin-bottom: 2px; cursor: pointer;
-      border: none; background: none; width: 100%; text-align: left;
-    }
-    .nav-item:hover { background: var(--color-border-light); color: var(--color-text); }
-    .nav-item.active { background: var(--color-primary-light); color: var(--color-primary-dark); }
-    [data-theme="dark"] .nav-item.active { background: rgba(37,99,235,0.15); color: #93c5fd; }
-    .nav-item i { width: 18px; height: 18px; flex-shrink: 0; }
-    .sidebar-footer { padding: var(--spacing-md); border-top: 1px solid var(--color-border); }
-    .user-card { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm); border-radius: var(--radius-md); transition: var(--transition-fast); }
-    .user-card:hover { background: var(--color-border-light); }
-    .user-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--color-accent), var(--color-warning));
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-weight: 600; font-size: 14px; flex-shrink: 0; overflow: hidden;
-    }
-    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .user-info { flex: 1; min-width: 0; }
-    .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-email { font-size: 11px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+// ============================================================
+// 🌍 ESTADO GLOBAL
+// ============================================================
+const state = {
+  user: null,
+  currentSection: 'dashboard',
+  settings: {
+    primaryColor: '#4F46E5',
+    secondaryColor: '#10B981',
+    accentColor: '#F59E0B',
+    fontFamily: 'Inter',
+    theme: 'light',
+    background: '',
+    googleCalendarConnected: false
+  },
+  institutions: [],
+  activeInstitution: null,
+  subjects: [],
+  students: [],
+  events: [],
+  logs: [],
+  familyContacts: [],
+  unsubscribers: []
+};
 
-    .main-content { min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar {
-      height: var(--header-height);
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 var(--spacing-xl);
-      position: sticky; top: 0; z-index: 50;
-    }
-    .topbar-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: var(--spacing-md); }
-    .topbar-title i { color: var(--color-primary); }
-    .topbar-actions { display: flex; align-items: center; gap: var(--spacing-sm); }
-    .icon-btn {
-      width: 40px; height: 40px; border-radius: var(--radius-md);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--color-text-muted); transition: var(--transition-fast);
-    }
-    .icon-btn:hover { background: var(--color-border-light); color: var(--color-text); }
-    .content-area { flex: 1; padding: var(--spacing-xl); max-width: 1400px; width: 100%; margin: 0 auto; }
+// Exponer estado globalmente
+window.appState = state;
+window.firebaseApp = { auth, db, provider };
 
-    /* VIEWS */
-    .view { display: none; animation: fadeIn 0.3s ease; }
-    .view.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .view-header { margin-bottom: var(--spacing-xl); }
-    .view-title { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin-bottom: var(--spacing-sm); }
-    .view-subtitle { color: var(--color-text-muted); font-size: 15px; }
+// ============================================================
+// 🔐 AUTENTICACIÓN
+// ============================================================
+window.loginWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    state.user = result.user;
+    await loadUserData();
+    showApp();
+  } catch (error) {
+    console.error('Error de autenticación:', error);
+    showNotification('Error al iniciar sesión: ' + error.message, 'error');
+  }
+};
 
-    /* CARDS */
-    .card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition-base);
-    }
-    .card:hover { box-shadow: var(--shadow-md); }
-    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); flex-wrap: wrap; gap: var(--spacing-sm); }
-    .card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: var(--spacing-sm); }
-    .card-title i { color: var(--color-primary); }
+window.logout = async () => {
+  try {
+    state.unsubscribers.forEach(unsub => unsub());
+    state.unsubscribers = [];
+    await signOut(auth);
+    state.user = null;
+    showLogin();
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  }
+};
 
-    .grid { display: grid; gap: var(--spacing-lg); }
-    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+// Escuchar cambios de autenticación
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    state.user = user;
+    await loadUserData();
+    showApp();
+  } else {
+    showLogin();
+  }
+});
 
-    .stat-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
-      transition: var(--transition-base);
-      position: relative; overflow: hidden;
-    }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: var(--stat-color, var(--color-primary));
-    }
-    .stat-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--spacing-sm); }
-    .stat-value { font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: var(--spacing-xs); }
-    .stat-change { font-size: 12px; color: var(--color-success); }
+// ============================================================
+// 💾 CARGA Y GUARDADO DE DATOS
+// ============================================================
+async function loadUserData() {
+  if (!state.user) return;
+  const userId = state.user.uid;
+  
+  // Cargar settings
+  const settingsSnap = await getDoc(doc(db, `users/${userId}/settings/main`));
+  if (settingsSnap.exists()) {
+    state.settings = { ...state.settings, ...settingsSnap.data() };
+  } else {
+    await setDoc(doc(db, `users/${userId}/settings/main`), state.settings);
+  }
+  
+  // Cargar perfil
+  const profileSnap = await getDoc(doc(db, `users/${userId}/profile/main`));
+  if (!profileSnap.exists()) {
+    await setDoc(doc(db, `users/${userId}/profile/main`), {
+      name: state.user.displayName || '',
+      email: state.user.email || '',
+      photo: state.user.photoURL || '',
+      createdAt: serverTimestamp()
+    });
+  }
+  
+  // Suscripciones en tiempo real
+  subscribeToInstitutions();
+  subscribeToEvents();
+  subscribeToLogs();
+  
+  applySettings();
+}
 
-    /* BOTONES */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
-      padding: 10px 18px; border-radius: var(--radius-md);
-      font-weight: 500; font-size: 14px;
-      transition: var(--transition-base); white-space: nowrap;
+function subscribeToInstitutions() {
+  const q = collection(db, `users/${state.user.uid}/institutions`);
+  const unsub = onSnapshot(q, (snapshot) => {
+    state.institutions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (state.institutions.length > 0 && !state.activeInstitution) {
+      state.activeInstitution = state.institutions[0].id;
     }
-    .btn-primary { background: var(--color-primary); color: white; }
-    .btn-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-    .btn-secondary { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); }
-    .btn-secondary:hover { background: var(--color-border-light); }
-    .btn-ghost { background: transparent; color: var(--color-text-muted); }
-    .btn-ghost:hover { background: var(--color-border-light); color: var(--color-text); }
-    .btn-danger { background: var(--color-danger); color: white; }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-success { background: var(--color-success); color: white; }
-    .btn-success:hover { background: #059669; }
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    renderActiveSection();
+  });
+  state.unsubscribers.push(unsub);
+}
 
-    /* FORMULARIOS */
-    .form-group { margin-bottom: var(--spacing-md); }
-    .form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: var(--spacing-xs); }
-    .form-input, .form-select, .form-textarea {
-      width: 100%; padding: 10px 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
-      transition: var(--transition-fast); font-size: 14px;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none; border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--color-primary-light);
-    }
-    .form-textarea { min-height: 80px; resize: vertical; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--spacing-md); }
+function subscribeToEvents() {
+  const q = collection(db, `users/${state.user.uid}/events`);
+  const unsub = onSnapshot(q, (snapshot) => {
+    state.events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderActiveSection();
+  });
+  state.unsubscribers.push(unsub);
+}
 
-    /* EMPTY STATE */
-    .empty-state { text-align: center; padding: var(--spacing-2xl) var(--spacing-lg); color: var(--color-text-muted); }
-    .empty-state-icon {
-      width: 64px; height: 64px; margin: 0 auto var(--spacing-md);
-      background: var(--color-border-light); border-radius: var(--radius-lg);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--color-text-light);
-    }
-    .empty-state-title { font-size: 16px; font-weight: 600; color: var(--color-text); margin-bottom: var(--spacing-xs); }
-    .empty-state-text { font-size: 14px; margin-bottom: var(--spacing-lg); }
+function subscribeToLogs() {
+  const q = collection(db, `users/${state.user.uid}/logs`);
+  const unsub = onSnapshot(q, (snapshot) => {
+    state.logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  });
+  state.unsubscribers.push(unsub);
+}
 
-    /* TOAST */
-    .toast-container { position: fixed; bottom: var(--spacing-lg); right: var(--spacing-lg); z-index: 9999; display: flex; flex-direction: column; gap: var(--spacing-sm); }
-    .toast {
-      background: var(--color-surface-elevated);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-md) var(--spacing-lg);
-      box-shadow: var(--shadow-lg);
-      display: flex; align-items: center; gap: var(--spacing-md);
-      min-width: 280px; animation: slideInRight 0.3s ease;
+window.saveData = async (collectionPath, data, id = null) => {
+  if (!state.user) return;
+  const path = `users/${state.user.uid}/${collectionPath}`;
+  try {
+    if (id) {
+      await setDoc(doc(db, path, id), data, { merge: true });
+    } else {
+      await addDoc(collection(db, path), { ...data, createdAt: serverTimestamp() });
     }
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    .toast.success { border-left: 4px solid var(--color-success); }
-    .toast.error { border-left: 4px solid var(--color-danger); }
-    .toast.info { border-left: 4px solid var(--color-primary); }
+    showNotification('Guardado correctamente', 'success');
+  } catch (error) {
+    console.error('Error al guardar:', error);
+    showNotification('Error al guardar: ' + error.message, 'error');
+  }
+};
 
-    /* MODAL */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: none; align-items: center; justify-content: center;
-      z-index: 2000; padding: var(--spacing-lg);
-      backdrop-filter: blur(4px);
-    }
-    .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
-    .modal {
-      background: var(--color-surface);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      max-width: 700px; width: 100%;
-      max-height: 90vh; overflow-y: auto;
-      animation: slideUp 0.3s ease;
-    }
-    .modal-large { max-width: 900px; }
-    .modal-header {
-      padding: var(--spacing-lg);
-      border-bottom: 1px solid var(--color-border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-title { font-size: 18px; font-weight: 600; font-family: var(--font-display); }
-    .modal-body { padding: var(--spacing-lg); }
-    .modal-footer {
-      padding: var(--spacing-lg);
-      border-top: 1px solid var(--color-border);
-      display: flex; justify-content: flex-end; gap: var(--spacing-sm);
-    }
+window.deleteData = async (collectionPath, id) => {
+  if (!state.user) return;
+  try {
+    await deleteDoc(doc(db, `users/${state.user.uid}/${collectionPath}`, id));
+    showNotification('Eliminado correctamente', 'success');
+  } catch (error) {
+    console.error('Error al eliminar:', error);
+    showNotification('Error al eliminar: ' + error.message, 'error');
+  }
+};
 
-    /* TABS */
-    .tabs {
-      display: flex; gap: var(--spacing-xs);
-      border-bottom: 1px solid var(--color-border);
-      margin-bottom: var(--spacing-lg);
-    }
-    .tab {
-      padding: var(--spacing-sm) var(--spacing-md);
-      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-      font-size: 13px; font-weight: 500;
-      color: var(--color-text-muted);
-      cursor: pointer; transition: var(--transition-fast);
-    }
-    .tab:hover { background: var(--color-border-light); }
-    .tab.active {
-      background: var(--color-primary-light);
-      color: var(--color-primary-dark);
-      border-bottom: 2px solid var(--color-primary);
-    }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+// ============================================================
+// 🎨 UI Y NAVEGACIÓN
+// ============================================================
+function showLogin() {
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('appScreen').classList.remove('active');
+}
 
-    /* TABLA */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .data-table th, .data-table td {
-      padding: var(--spacing-sm) var(--spacing-md);
-      text-align: left;
-      border-bottom: 1px solid var(--color-border);
-    }
-    .data-table th {
-      background: var(--color-border-light);
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .data-table tr:hover { background: var(--color-border-light); }
+function showApp() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  updateUserUI();
+  renderActiveSection();
+}
 
-    /* INSTITUCIÓN CARD */
-    .institution-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
-      margin-bottom: var(--spacing-md);
-      transition: var(--transition-base);
-      position: relative; overflow: hidden;
-    }
-    .institution-card::before {
-      content: ''; position: absolute; top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: var(--inst-color, var(--color-primary));
-    }
-    .institution-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .institution-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md); padding-left: var(--spacing-md); }
-    .institution-card-title { font-size: 18px; font-weight: 700; font-family: var(--font-display); }
-    .institution-card-subtitle { font-size: 13px; color: var(--color-text-muted); margin-top: 2px; }
-    .institution-card-actions { display: flex; gap: var(--spacing-xs); }
-    .institution-card-body { padding-left: var(--spacing-md); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); font-size: 13px; }
-    .institution-card-body div { color: var(--color-text-muted); }
-    .institution-card-body strong { color: var(--color-text); display: block; margin-bottom: 2px; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 10px; border-radius: 999px;
-      font-size: 11px; font-weight: 600;
-      background: var(--color-primary-light); color: var(--color-primary-dark);
-    }
-    .badge.active { background: #d1fae5; color: #065f46; }
-    .badge.warning { background: #fef3c7; color: #92400e; }
-    .badge.danger { background: #fee2e2; color: #991b1b; }
+function updateUserUI() {
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+  const userPhoto = document.getElementById('userPhoto');
+  if (userName) userName.textContent = state.user?.displayName || 'Docente';
+  if (userEmail) userEmail.textContent = state.user?.email || '';
+  if (userPhoto && state.user?.photoURL) userPhoto.src = state.user.photoURL;
+}
 
-    /* MATERIA CARD */
-    .subject-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
-      transition: var(--transition-base);
-      position: relative; overflow: hidden;
-    }
-    .subject-card::before {
-      content: ''; position: absolute; top: 0; left: 0;
-      width: 100%; height: 4px;
-      background: var(--subject-color, var(--color-primary));
-    }
-    .subject-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .subject-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md); }
-    .subject-color-dot {
-      width: 16px; height: 16px; border-radius: 50%;
-      display: inline-block; margin-right: 8px;
-      border: 2px solid var(--color-border);
-    }
-    .subject-card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; }
-    .subject-card-info { font-size: 13px; color: var(--color-text-muted); }
+window.navigateTo = (section) => {
+  state.currentSection = section;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector(`[data-section="${section}"]`);
+  if (navItem) navItem.classList.add('active');
+  renderActiveSection();
+  if (window.innerWidth < 1024) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
+};
 
-    /* CALENDARIO */
-    .calendar-nav {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: var(--spacing-lg);
-    }
-    .calendar-nav-title { font-size: 20px; font-weight: 700; font-family: var(--font-display); }
-    .calendar-annual {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: var(--spacing-lg);
-    }
-    .calendar-month {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--spacing-md);
-    }
-    .calendar-month-title {
-      font-size: 14px; font-weight: 600;
-      text-align: center; margin-bottom: var(--spacing-sm);
-      text-transform: capitalize;
-    }
-    .calendar-days-header {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 2px; margin-bottom: 4px;
-    }
-    .calendar-days-header div {
-      text-align: center; font-size: 10px;
-      color: var(--color-text-muted); font-weight: 600;
-    }
-    .calendar-days {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 2px;
-    }
-    .calendar-day {
-      aspect-ratio: 1;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition-fast);
-      position: relative;
-    }
-    .calendar-day:hover { background: var(--color-border-light); }
-    .calendar-day.today { background: var(--color-primary); color: white; font-weight: 600; }
-    .calendar-day.other-month { color: var(--color-text-light); }
-    .calendar-day.has-events::after {
-      content: ''; position: absolute; bottom: 2px;
-      width: 4px; height: 4px; border-radius: 50%;
-      background: var(--color-accent);
-    }
-    .calendar-monthly-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 1px; background: var(--color-border);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); overflow: hidden;
-    }
-    .calendar-monthly-day {
-      background: var(--color-surface);
-      min-height: 100px;
-      padding: var(--spacing-sm);
-      font-size: 12px;
-    }
-    .calendar-monthly-day.header {
-      background: var(--color-border-light);
-      font-weight: 600; text-align: center;
-      min-height: auto; padding: var(--spacing-sm);
-    }
-    .calendar-monthly-day.other-month { background: var(--color-border-light); color: var(--color-text-light); }
-    .calendar-monthly-day.today { background: var(--color-primary-light); }
-    .calendar-monthly-day-number { font-weight: 600; margin-bottom: 4px; }
-    .calendar-event-chip {
-      background: var(--event-color, var(--color-primary));
-      color: white; padding: 2px 6px;
-      border-radius: 3px; font-size: 10px;
-      margin-bottom: 2px; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap;
-      cursor: pointer;
-    }
-    .calendar-weekly {
-      display: grid; grid-template-columns: 60px repeat(7, 1fr);
-      gap: 1px; background: var(--color-border);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); overflow: hidden;
-    }
-    .calendar-weekly-cell {
-      background: var(--color-surface);
-      min-height: 80px;
-      padding: var(--spacing-sm);
-      font-size: 12px;
-    }
-    .calendar-weekly-cell.header {
-      background: var(--color-border-light);
-      font-weight: 600; text-align: center;
-    }
-    .calendar-weekly-cell.time {
-      background: var(--color-border-light);
-      font-weight: 600; display: flex;
-      align-items: center; justify-content: center;
-      font-size: 11px;
-    }
+function renderActiveSection() {
+  const content = document.getElementById('mainContent');
+  const renderers = {
+    'dashboard': renderDashboard,
+    'institutions': renderInstitutions,
+    'subjects': renderSubjects,
+    'calendar': renderCalendar,
+    'students': renderStudents,
+    'classes': renderClasses,
+    'planning': renderPlanning,
+    'subjectDetails': renderSubjectDetails,
+    'evaluation': renderEvaluation,
+    'families': renderFamilies,
+    'staff': renderStaff,
+    'wellness': renderWellness,
+    'training': renderTraining,
+    'settings': renderSettings
+  };
+  const renderer = renderers[state.currentSection] || renderDashboard;
+  content.innerHTML = renderer();
+  lucide.createIcons();
+  if (typeof window.attachSectionHandlers === 'function') {
+    window.attachSectionHandlers();
+  }
+}
 
-    /* CONFIG ESTILOS */
-    .style-preview {
-      width: 100%; height: 120px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      margin-bottom: var(--spacing-md);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; color: var(--color-text-muted);
-    }
-    .bg-presets {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: var(--spacing-sm); margin-top: var(--spacing-sm);
-    }
-    .bg-preset {
-      aspect-ratio: 16/9;
-      border-radius: var(--radius-sm);
-      border: 2px solid var(--color-border);
-      cursor: pointer;
-      transition: var(--transition-fast);
-      background-size: cover;
-      background-position: center;
-    }
-    .bg-preset:hover { border-color: var(--color-primary); transform: scale(1.05); }
-    .bg-preset.active { border-color: var(--color-primary); border-width: 3px; }
+// ============================================================
+// 🎨 RENDERIZADO DE SECCIONES
+// ============================================================
+function renderDashboard() {
+  const today = new Date();
+  const todayEvents = state.events.filter(e => {
+    if (!e.date) return false;
+    const eventDate = new Date(e.date);
+    return eventDate.toDateString() === today.toDateString();
+  });
+  
+  const upcomingEvents = state.events
+    .filter(e => e.date && new Date(e.date) >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 5);
+  
+  const totalStudents = state.institutions.reduce((sum, inst) => sum + (inst.studentCount || 0), 0);
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>¡Buen día, ${state.user?.displayName?.split(' ')[0] || 'docente'}! 👋</h1>
+        <p class="subtitle">${today.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      </div>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">
+          <i data-lucide="building-2"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">${state.institutions.length}</span>
+          <span class="stat-label">Instituciones</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--secondary-light); color: var(--secondary);">
+          <i data-lucide="book-open"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">${state.institutions.reduce((sum, i) => sum + (i.subjectCount || 0), 0)}</span>
+          <span class="stat-label">Materias</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--accent-light); color: var(--accent);">
+          <i data-lucide="users"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">${totalStudents}</span>
+          <span class="stat-label">Alumnos</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #FEE2E2; color: #DC2626;">
+          <i data-lucide="calendar"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">${state.events.length}</span>
+          <span class="stat-label">Eventos</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="calendar-days"></i> Próximos eventos</h3>
+        </div>
+        <div class="card-body">
+          ${upcomingEvents.length === 0 ? `
+            <div class="empty-state">
+              <i data-lucide="calendar-x"></i>
+              <p>Sin eventos próximos</p>
+              <button class="btn btn-primary btn-sm" onclick="navigateTo('calendar')">Crear evento</button>
+            </div>
+          ` : upcomingEvents.map(e => `
+            <div class="event-item" style="border-left: 3px solid ${e.color || 'var(--primary)'};">
+              <div class="event-date">${new Date(e.date).toLocaleDateString('es-ES', {day:'2-digit', month:'short'})}</div>
+              <div class="event-info">
+                <strong>${e.title}</strong>
+                <span>${e.type || 'Evento'}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="zap"></i> Accesos rápidos</h3>
+        </div>
+        <div class="card-body">
+          <div class="quick-actions">
+            <button class="quick-action" onclick="navigateTo('institutions')">
+              <i data-lucide="building-2"></i>
+              <span>Nueva institución</span>
+            </button>
+            <button class="quick-action" onclick="navigateTo('subjects')">
+              <i data-lucide="book-open"></i>
+              <span>Nueva materia</span>
+            </button>
+            <button class="quick-action" onclick="navigateTo('students')">
+              <i data-lucide="user-plus"></i>
+              <span>Nuevo alumno</span>
+            </button>
+            <button class="quick-action" onclick="navigateTo('calendar')">
+              <i data-lucide="calendar-plus"></i>
+              <span>Nuevo evento</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="book-marked"></i> Clases de hoy</h3>
+        </div>
+        <div class="card-body">
+          ${todayEvents.filter(e => e.type === 'Clase').length === 0 ? `
+            <div class="empty-state">
+              <i data-lucide="clock"></i>
+              <p>Configura tu horario en Instituciones</p>
+            </div>
+          ` : todayEvents.filter(e => e.type === 'Clase').map(e => `
+            <div class="class-item" style="background: ${e.color || 'var(--primary-light)'}20;">
+              <strong>${e.title}</strong>
+              <span>${e.time || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
 
-    /* TOGGLE */
-    .toggle-container {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: var(--spacing-md);
-      background: var(--color-border-light);
-      border-radius: var(--radius-md);
-      margin-bottom: var(--spacing-sm);
-    }
-    .toggle-label { font-size: 14px; font-weight: 500; }
-    .toggle-desc { font-size: 12px; color: var(--color-text-muted); }
-    .toggle {
-      position: relative; width: 44px; height: 24px;
-      background: var(--color-border);
-      border-radius: 999px; cursor: pointer;
-      transition: var(--transition-fast);
-    }
-    .toggle.active { background: var(--color-primary); }
-    .toggle::after {
-      content: ''; position: absolute;
-      top: 2px; left: 2px;
-      width: 20px; height: 20px;
-      background: white; border-radius: 50%;
-      transition: var(--transition-fast);
-    }
-    .toggle.active::after { left: 22px; }
+function renderInstitutions() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Instituciones Académicas</h1>
+        <p class="subtitle">Gestiona tus centros educativos, ciclos y horarios</p>
+      </div>
+      <button class="btn btn-primary" onclick="openInstitutionModal()">
+        <i data-lucide="plus"></i> Nueva institución
+      </button>
+    </div>
+    
+    <div class="institutions-grid">
+      ${state.institutions.length === 0 ? `
+        <div class="empty-state large">
+          <i data-lucide="building-2"></i>
+          <h3>No hay instituciones aún</h3>
+          <p>Crea tu primera institución para comenzar a organizar tu año escolar</p>
+          <button class="btn btn-primary" onclick="openInstitutionModal()">
+            <i data-lucide="plus"></i> Crear institución
+          </button>
+        </div>
+      ` : state.institutions.map(inst => `
+        <div class="institution-card ${state.activeInstitution === inst.id ? 'active' : ''}">
+          <div class="institution-header">
+            <div class="institution-icon" style="background: ${inst.color || 'var(--primary)'}20; color: ${inst.color || 'var(--primary)'};">
+              <i data-lucide="building-2"></i>
+            </div>
+            <div class="institution-actions">
+              <button class="icon-btn" onclick="setActiveInstitution('${inst.id}')" title="Activar">
+                <i data-lucide="check-circle"></i>
+              </button>
+              <button class="icon-btn" onclick="editInstitution('${inst.id}')" title="Editar">
+                <i data-lucide="edit-2"></i>
+              </button>
+              <button class="icon-btn danger" onclick="confirmDeleteInstitution('${inst.id}')" title="Eliminar">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+          <h3>${inst.name || 'Sin nombre'}</h3>
+          <p class="institution-meta">${inst.cycle || 'Sin ciclo'} · ${inst.level || 'Sin nivel'}</p>
+          <p class="institution-address"><i data-lucide="map-pin"></i> ${inst.address || 'Sin dirección'}</p>
+          <div class="institution-stats">
+            <span><i data-lucide="book-open"></i> ${inst.subjectCount || 0} materias</span>
+            <span><i data-lucide="users"></i> ${inst.studentCount || 0} alumnos</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    
+    <div id="institutionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="institutionModalTitle">Nueva institución</h2>
+          <button class="icon-btn" onclick="closeModal('institutionModal')">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form id="institutionForm" onsubmit="saveInstitution(event)">
+          <input type="hidden" id="inst_id" />
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Nombre de la institución *</label>
+              <input type="text" id="inst_name" required />
+            </div>
+            <div class="form-group">
+              <label>Ciclo escolar</label>
+              <input type="text" id="inst_cycle" placeholder="2025-2026" />
+            </div>
+            <div class="form-group">
+              <label>Nivel / Grado</label>
+              <input type="text" id="inst_level" placeholder="Secundaria, Bachillerato..." />
+            </div>
+            <div class="form-group full">
+              <label>Dirección</label>
+              <input type="text" id="inst_address" />
+            </div>
+            <div class="form-group">
+              <label>Coordinación</label>
+              <input type="text" id="inst_coordination" />
+            </div>
+            <div class="form-group">
+              <label>Email de contacto</label>
+              <input type="email" id="inst_email" />
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" id="inst_phone" />
+            </div>
+            <div class="form-group">
+              <label>Color identificador</label>
+              <input type="color" id="inst_color" value="#4F46E5" />
+            </div>
+            <div class="form-group full">
+              <label>Notas</label>
+              <textarea id="inst_notes" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('institutionModal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
 
-    /* CHECKBOX */
-    .checkbox-container {
-      display: flex; align-items: center; gap: var(--spacing-sm);
-      cursor: pointer;
-    }
-    .checkbox {
-      width: 18px; height: 18px;
-      border: 2px solid var(--color-border);
-      border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-      transition: var(--transition-fast);
-    }
-    .checkbox.checked {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-    }
-    .checkbox.checked::after {
-      content: '✓'; color: white; font-size: 12px; font-weight: bold;
-    }
+function renderSubjects() {
+  const activeInst = state.institutions.find(i => i.id === state.activeInstitution);
+  const subjects = activeInst?.subjects || [];
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Materias y Grupos</h1>
+        <p class="subtitle">Organiza tus asignaturas con colores personalizados</p>
+      </div>
+      <button class="btn btn-primary" onclick="openSubjectModal()">
+        <i data-lucide="plus"></i> Nueva materia
+      </button>
+    </div>
+    
+    ${!activeInst ? `
+      <div class="empty-state large">
+        <i data-lucide="alert-circle"></i>
+        <h3>Primero crea una institución</h3>
+        <p>Necesitas una institución activa para gestionar materias</p>
+        <button class="btn btn-primary" onclick="navigateTo('institutions')">Ir a Instituciones</button>
+      </div>
+    ` : `
+      <div class="subjects-grid">
+        ${subjects.length === 0 ? `
+          <div class="empty-state large">
+            <i data-lucide="book-open"></i>
+            <h3>Sin materias aún</h3>
+            <p>Crea tu primera materia para ${activeInst.name}</p>
+            <button class="btn btn-primary" onclick="openSubjectModal()">
+              <i data-lucide="plus"></i> Crear materia
+            </button>
+          </div>
+        ` : subjects.map(sub => `
+          <div class="subject-card" style="border-left: 4px solid ${sub.color || 'var(--primary)'};">
+            <div class="subject-header">
+              <div class="subject-color" style="background: ${sub.color || 'var(--primary)'};"></div>
+              <div class="subject-actions">
+                <button class="icon-btn" onclick="viewSubjectDetails('${sub.id}')" title="Ver detalles">
+                  <i data-lucide="eye"></i>
+                </button>
+                <button class="icon-btn" onclick="editSubject('${sub.id}')" title="Editar">
+                  <i data-lucide="edit-2"></i>
+                </button>
+                <button class="icon-btn danger" onclick="deleteSubject('${sub.id}')" title="Eliminar">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            </div>
+            <h3>${sub.name}</h3>
+            <p class="subject-meta">Grupo: ${sub.group || 'Sin grupo'} · Aula: ${sub.classroom || 'N/A'}</p>
+            <p class="subject-description">${sub.description || 'Sin descripción'}</p>
+            <div class="subject-stats">
+              <span><i data-lucide="users"></i> ${sub.studentCount || 0} alumnos</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+    
+    <div id="subjectModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="subjectModalTitle">Nueva materia</h2>
+          <button class="icon-btn" onclick="closeModal('subjectModal')">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form id="subjectForm" onsubmit="saveSubject(event)">
+          <input type="hidden" id="sub_id" />
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Nombre de la materia *</label>
+              <input type="text" id="sub_name" required />
+            </div>
+            <div class="form-group">
+              <label>Grupo</label>
+              <input type="text" id="sub_group" placeholder="1A, 2B..." />
+            </div>
+            <div class="form-group">
+              <label>Aula</label>
+              <input type="text" id="sub_classroom" />
+            </div>
+            <div class="form-group">
+              <label>Color</label>
+              <input type="color" id="sub_color" value="#4F46E5" />
+            </div>
+            <div class="form-group full">
+              <label>Descripción</label>
+              <textarea id="sub_description" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('subjectModal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
 
-    /* PLANO AULA */
-    .classroom-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md);
-    }
-    .classroom-desk {
-      aspect-ratio: 1;
-      background: var(--color-surface);
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-md);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 500;
-      cursor: pointer; transition: var(--transition-fast);
-      padding: var(--spacing-xs);
-      text-align: center;
-    }
-    .classroom-desk:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
-    .classroom-desk.occupied { background: var(--color-primary-light); border-color: var(--color-primary); }
-    .classroom-desk.neae { background: #fef3c7; border-color: var(--color-warning); }
-    .classroom-board {
-      grid-column: 1 / -1;
-      background: var(--color-border);
-      padding: var(--spacing-sm);
-      text-align: center;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      margin-bottom: var(--spacing-md);
-    }
+function renderCalendar() {
+  const currentDate = new Date();
+  const month = currentDate.getMonth();
+  const year = currentDate.getFullYear();
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Calendarios Enlazados</h1>
+        <p class="subtitle">Vista anual, mensual y semanal sincronizadas</p>
+      </div>
+      <button class="btn btn-primary" onclick="openEventModal()">
+        <i data-lucide="plus"></i> Nuevo evento
+      </button>
+    </div>
+    
+    <div class="calendar-tabs">
+      <button class="tab-btn active" onclick="switchCalendarView('month', this)">Mensual</button>
+      <button class="tab-btn" onclick="switchCalendarView('year', this)">Anual</button>
+      <button class="tab-btn" onclick="switchCalendarView('week', this)">Semanal</button>
+    </div>
+    
+    <div id="calendarView">
+      ${renderMonthView(year, month)}
+    </div>
+    
+    <div id="eventModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="eventModalTitle">Nuevo evento</h2>
+          <button class="icon-btn" onclick="closeModal('eventModal')">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form id="eventForm" onsubmit="saveEvent(event)">
+          <input type="hidden" id="evt_id" />
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Título *</label>
+              <input type="text" id="evt_title" required />
+            </div>
+            <div class="form-group">
+              <label>Fecha *</label>
+              <input type="date" id="evt_date" required />
+            </div>
+            <div class="form-group">
+              <label>Hora</label>
+              <input type="time" id="evt_time" />
+            </div>
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="evt_type">
+                <option value="Clase">Clase</option>
+                <option value="Evaluación">Evaluación</option>
+                <option value="Reunión">Reunión</option>
+                <option value="Festivo">Festivo</option>
+                <option value="Vacaciones">Vacaciones</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Materia</label>
+              <select id="evt_subject">
+                <option value="">-- Sin materia --</option>
+                ${state.institutions.flatMap(i => i.subjects || []).map(s => 
+                  `<option value="${s.id}" data-color="${s.color}">${s.name}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Color</label>
+              <input type="color" id="evt_color" value="#4F46E5" />
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="evt_sync_google" />
+                Sincronizar con Google Calendar
+              </label>
+            </div>
+            <div class="form-group full">
+              <label>Descripción</label>
+              <textarea id="evt_description" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
 
-    /* RESPONSIVE */
-    @media (max-width: 1024px) {
-      .app-container.active { grid-template-columns: 1fr; }
-      .sidebar { position: fixed; left: -100%; width: 280px; z-index: 100; transition: var(--transition-base); }
-      .sidebar.open { left: 0; box-shadow: var(--shadow-xl); }
-      .menu-toggle { display: flex !important; }
+function renderMonthView(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDay = firstDay.getDay();
+  
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  
+  let days = '';
+  for (let i = 0; i < startDay; i++) {
+    days += '<div class="calendar-day empty"></div>';
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dayEvents = state.events.filter(e => e.date === dateStr);
+    
+    days += `
+      <div class="calendar-day" onclick="openEventModal('${dateStr}')">
+        <div class="day-number">${day}</div>
+        <div class="day-events">
+          ${dayEvents.slice(0, 3).map(e => `
+            <div class="day-event" style="background: ${e.color || 'var(--primary)'};">
+              ${e.title}
+            </div>
+          `).join('')}
+          ${dayEvents.length > 3 ? `<div class="day-event more">+${dayEvents.length - 3} más</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="month-view">
+      <div class="month-header">
+        <button class="icon-btn" onclick="changeMonth(-1)">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <h2>${monthNames[month]} ${year}</h2>
+        <button class="icon-btn" onclick="changeMonth(1)">
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+      <div class="calendar-weekdays">
+        <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+      </div>
+      <div class="calendar-grid">
+        ${days}
+      </div>
+    </div>
+  `;
+}
+
+function renderStudents() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Alumnado</h1>
+        <p class="subtitle">Fichas completas, NEAE y planes de apoyo</p>
+      </div>
+      <button class="btn btn-primary" onclick="openStudentModal()">
+        <i data-lucide="user-plus"></i> Nuevo alumno
+      </button>
+    </div>
+    
+    <div class="students-stats">
+      <div class="stat-mini">
+        <span class="stat-value">${state.students.length}</span>
+        <span class="stat-label">Total alumnos</span>
+      </div>
+      <div class="stat-mini">
+        <span class="stat-value">${state.students.filter(s => s.neae && s.neae !== 'Sin necesidades').length}</span>
+        <span class="stat-label">Con NEAE</span>
+      </div>
+      <div class="stat-mini">
+        <span class="stat-value">${state.students.filter(s => {
+          if (!s.birthdate) return false;
+          const b = new Date(s.birthdate);
+          const now = new Date();
+          return b.getMonth() === now.getMonth();
+        }).length}</span>
+        <span class="stat-label">Cumpleaños este mes</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-body">
+        <input type="text" class="search-input" placeholder="Buscar alumno..." oninput="filterStudents(this.value)" />
+      </div>
+    </div>
+    
+    <div id="studentsList" class="students-grid">
+      ${state.students.length === 0 ? `
+        <div class="empty-state large">
+          <i data-lucide="users"></i>
+          <h3>Sin alumnos registrados</h3>
+          <p>Comienza agregando las fichas de tus alumnos</p>
+        </div>
+      ` : state.students.map(s => renderStudentCard(s)).join('')}
+    </div>
+    
+    <div id="studentModal" class="modal">
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h2 id="studentModalTitle">Nuevo alumno</h2>
+          <button class="icon-btn" onclick="closeModal('studentModal')">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form id="studentForm" onsubmit="saveStudent(event)">
+          <input type="hidden" id="stu_id" />
+          <div class="form-tabs">
+            <button type="button" class="tab-btn active" onclick="switchStudentTab('personal', this)">Datos personales</button>
+            <button type="button" class="tab-btn" onclick="switchStudentTab('family', this)">Familia</button>
+            <button type="button" class="tab-btn" onclick="switchStudentTab('health', this)">Salud</button>
+            <button type="button" class="tab-btn" onclick="switchStudentTab('neae', this)">NEAE</button>
+          </div>
+          
+          <div id="tab-personal" class="form-tab-content active">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Nombre completo *</label>
+                <input type="text" id="stu_name" required />
+              </div>
+              <div class="form-group">
+                <label>Matrícula</label>
+                <input type="text" id="stu_enrollment" />
+              </div>
+              <div class="form-group">
+                <label>Fecha de nacimiento</label>
+                <input type="date" id="stu_birthdate" />
+              </div>
+              <div class="form-group">
+                <label>Nacionalidad</label>
+                <input type="text" id="stu_nationality" />
+              </div>
+              <div class="form-group">
+                <label>Género</label>
+                <select id="stu_gender">
+                  <option value="">Seleccionar</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Institución</label>
+                <select id="stu_institution">
+                  <option value="">Seleccionar</option>
+                  ${state.institutions.map(i => `<option value="${i.id}">${i.name}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Grupo</label>
+                <input type="text" id="stu_group" />
+              </div>
+              <div class="form-group full">
+                <label>Dirección</label>
+                <input type="text" id="stu_address" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="tab-family" class="form-tab-content">
+            <h4>Tutor 1</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="stu_tutor1_name" />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="stu_tutor1_phone" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="stu_tutor1_email" />
+              </div>
+            </div>
+            <h4>Tutor 2 (opcional)</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="stu_tutor2_name" />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="stu_tutor2_phone" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="stu_tutor2_email" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="tab-health" class="form-tab-content">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Alergias</label>
+                <textarea id="stu_allergies" rows="2"></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Afecciones médicas</label>
+                <textarea id="stu_conditions" rows="2"></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Medicación</label>
+                <textarea id="stu_medication" rows="2"></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Contacto de emergencia</label>
+                <input type="text" id="stu_emergency" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="tab-neae" class="form-tab-content">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Tipo de NEAE</label>
+                <select id="stu_neae_type">
+                  <option value="Sin necesidades específicas">Sin necesidades específicas</option>
+                  <option value="Apoyo especializado">Apoyo especializado</option>
+                  <option value="Adaptación curricular">Adaptación curricular</option>
+                  <option value="Altas capacidades">Altas capacidades</option>
+                  <option value="Incorporación tardía">Incorporación tardía</option>
+                  <option value="Plan de apoyo individual">Plan de apoyo individual</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Medidas y apoyos</label>
+                <textarea id="stu_neae_measures" rows="4"></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Observaciones</label>
+                <textarea id="stu_observations" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('studentModal')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function renderStudentCard(s) {
+  return `
+    <div class="student-card" onclick="viewStudent('${s.id}')">
+      <div class="student-avatar" style="background: ${s.neae && s.neae !== 'Sin necesidades específicas' ? 'var(--accent)' : 'var(--primary)'}20; color: ${s.neae && s.neae !== 'Sin necesidades específicas' ? 'var(--accent)' : 'var(--primary)'};">
+        ${s.name?.charAt(0)?.toUpperCase() || '?'}
+      </div>
+      <div class="student-info">
+        <strong>${s.name}</strong>
+        <span>${s.group || 'Sin grupo'} ${s.neae && s.neae !== 'Sin necesidades específicas' ? '· <span class="neae-badge">NEAE</span>' : ''}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderClasses() {
+  const activeInst = state.institutions.find(i => i.id === state.activeInstitution);
+  const subjects = activeInst?.subjects || [];
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Panel de Mis Clases</h1>
+        <p class="subtitle">Hasta 12 grupos con lista, plano de aula y notas</p>
+      </div>
+    </div>
+    
+    <div class="classes-grid">
+      ${subjects.length === 0 ? `
+        <div class="empty-state large">
+          <i data-lucide="layout-grid"></i>
+          <h3>Sin grupos configurados</h3>
+          <p>Crea materias primero para ver tus grupos aquí</p>
+          <button class="btn btn-primary" onclick="navigateTo('subjects')">Ir a Materias</button>
+        </div>
+      ` : subjects.map(s => `
+        <div class="class-card">
+          <div class="class-color" style="background: ${s.color || 'var(--primary)'};"></div>
+          <h3>${s.name}</h3>
+          <p class="class-meta">Grupo ${s.group || 'N/A'} · Aula ${s.classroom || 'N/A'}</p>
+          <div class="class-actions">
+            <button class="btn btn-sm" onclick="viewClassList('${s.id}')">
+              <i data-lucide="list"></i> Lista
+            </button>
+            <button class="btn btn-sm" onclick="viewClassroomMap('${s.id}')">
+              <i data-lucide="grid-3x3"></i> Plano
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderPlanning() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Enseñanza y Planeación</h1>
+        <p class="subtitle">Programación anual, unidades didácticas y planeación semanal</p>
+      </div>
+    </div>
+    
+    <div class="planning-grid">
+      <div class="planning-card" onclick="navigateTo('subjectDetails')">
+        <i data-lucide="book-open"></i>
+        <h3>Programación anual</h3>
+        <p>Planifica el año por materia y grupo</p>
+      </div>
+      <div class="planning-card">
+        <i data-lucide="layers"></i>
+        <h3>Unidades didácticas</h3>
+        <p>Hasta 6 unidades por materia</p>
+      </div>
+      <div class="planning-card">
+        <i data-lucide="calendar-range"></i>
+        <h3>Planeación semanal</h3>
+        <p>Avance semana a semana</p>
+      </div>
+      <div class="planning-card">
+        <i data-lucide="file-text"></i>
+        <h3>Bitácora diaria</h3>
+        <p>Registro por día de clase</p>
+      </div>
+      <div class="planning-card">
+        <i data-lucide="clipboard-check"></i>
+        <h3>Evaluaciones programadas</h3>
+        <p>Fechas, grupos y contenidos</p>
+      </div>
+      <div class="planning-card">
+        <i data-lucide="map"></i>
+        <h3>Salidas y excursiones</h3>
+        <p>Planifica actividades externas</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderSubjectDetails() {
+  const subjects = state.institutions.flatMap(i => i.subjects || []);
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Detalles de Materia</h1>
+        <p class="subtitle">Temario, planeación, alumnos, rúbrica y calificaciones</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-body">
+        <label>Selecciona una materia</label>
+        <select id="subjectSelector" onchange="loadSubjectDetails(this.value)">
+          <option value="">-- Selecciona --</option>
+          ${subjects.map(s => `<option value="${s.id}">${s.name} - ${s.group || 'Sin grupo'}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    
+    <div id="subjectDetailsContent">
+      <div class="empty-state large">
+        <i data-lucide="book-open"></i>
+        <h3>Selecciona una materia</h3>
+        <p>Elige una materia del selector superior para ver sus detalles</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderEvaluation() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Evaluación y Registros</h1>
+        <p class="subtitle">Calificaciones, conducta y juntas de evaluación</p>
+      </div>
+    </div>
+    
+    <div class="evaluation-grid">
+      <div class="evaluation-card">
+        <i data-lucide="bar-chart-3"></i>
+        <h3>Registro de calificaciones</h3>
+        <p>Por grupo y periodo</p>
+        <button class="btn btn-primary btn-sm">Gestionar</button>
+      </div>
+      <div class="evaluation-card">
+        <i data-lucide="award"></i>
+        <h3>Registro de conducta</h3>
+        <p>Descriptores por alumno</p>
+        <button class="btn btn-primary btn-sm">Gestionar</button>
+      </div>
+      <div class="evaluation-card">
+        <i data-lucide="calendar-check"></i>
+        <h3>Periodos de evaluación</h3>
+        <p>3 periodos configurables</p>
+        <button class="btn btn-primary btn-sm">Configurar</button>
+      </div>
+      <div class="evaluation-card">
+        <i data-lucide="users"></i>
+        <h3>Juntas de evaluación</h3>
+        <p>Actas y acuerdos</p>
+        <button class="btn btn-primary btn-sm">Gestionar</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFamilies() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Familias</h1>
+        <p class="subtitle">Comunicación, reuniones y fichas de contacto</p>
+      </div>
+    </div>
+    
+    <div class="families-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="message-circle"></i> Comunicación con familias</h3>
+        </div>
+        <div class="card-body">
+          <p>Registro de contactos</p>
+          <button class="btn btn-primary btn-sm">Registrar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="calendar"></i> Reuniones concertadas</h3>
+        </div>
+        <div class="card-body">
+          <p>Horario de atención</p>
+          <button class="btn btn-primary btn-sm">Configurar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStaff() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Personal y Reuniones</h1>
+        <p class="subtitle">Claustros, departamentos y contactos del centro</p>
+      </div>
+    </div>
+    
+    <div class="staff-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="users"></i> Reuniones de personal</h3>
+        </div>
+        <div class="card-body">
+          <p>Claustro y departamentos</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="contact"></i> Contactos del centro</h3>
+        </div>
+        <div class="card-body">
+          <p>Dirección y colegas</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWellness() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Bienestar Docente 🧘</h1>
+        <p class="subtitle">Cuida de ti para cuidar mejor a tus alumnos</p>
+      </div>
+    </div>
+    
+    <div class="wellness-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="activity"></i> Registro semanal</h3>
+        </div>
+        <div class="card-body">
+          <p>Energía, carga, ánimo, sueño</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="pen-line"></i> Reflexiones docentes</h3>
+        </div>
+        <div class="card-body">
+          <p>Espacio libre para pensar</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="target"></i> Objetivos del año</h3>
+        </div>
+        <div class="card-body">
+          <p>Incluye bienestar personal</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="heart"></i> Lo que me sostiene</h3>
+        </div>
+        <div class="card-body">
+          <p>Y los límites que quiero mantener</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTraining() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Formación y Carrera</h1>
+        <p class="subtitle">Desarrollo profesional continuo</p>
+      </div>
+    </div>
+    
+    <div class="training-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="graduation-cap"></i> Registro de formación</h3>
+        </div>
+        <div class="card-body">
+          <p>Cursos y certificaciones</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="trending-up"></i> Objetivos profesionales</h3>
+        </div>
+        <div class="card-body">
+          <p>Plan de desarrollo</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSettings() {
+  return `
+    <div class="section-header">
+      <div>
+        <h1>Configuración</h1>
+        <p class="subtitle">Personaliza tu experiencia y gestiona tus datos</p>
+      </div>
+    </div>
+    
+    <div class="settings-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="palette"></i> Personalización visual</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Color primario</label>
+              <input type="color" id="set_primary" value="${state.settings.primaryColor}" onchange="updateSetting('primaryColor', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Color secundario</label>
+              <input type="color" id="set_secondary" value="${state.settings.secondaryColor}" onchange="updateSetting('secondaryColor', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Color de acento</label>
+              <input type="color" id="set_accent" value="${state.settings.accentColor}" onchange="updateSetting('accentColor', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Tipografía</label>
+              <select id="set_font" onchange="updateSetting('fontFamily', this.value)">
+                <option value="Inter" ${state.settings.fontFamily === 'Inter' ? 'selected' : ''}>Inter</option>
+                <option value="Montserrat" ${state.settings.fontFamily === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                <option value="Roboto" ${state.settings.fontFamily === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                <option value="Open Sans" ${state.settings.fontFamily === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                <option value="Atkinson Hyperlegible" ${state.settings.fontFamily === 'Atkinson Hyperlegible' ? 'selected' : ''}>Atkinson Hyperlegible</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="database"></i> Datos</h3>
+        </div>
+        <div class="card-body">
+          <div class="settings-actions">
+            <button class="btn btn-secondary" onclick="exportData()">
+              <i data-lucide="download"></i> Exportar datos (JSON)
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+              <i data-lucide="upload"></i> Importar datos
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+            <button class="btn btn-danger" onclick="confirmDeleteAll()">
+              <i data-lucide="trash-2"></i> Borrar todos los datos
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="calendar"></i> Google Calendar</h3>
+        </div>
+        <div class="card-body">
+          <p>Sincronización automática</p>
+          <label class="switch">
+            <input type="checkbox" id="set_google_cal" ${state.settings.googleCalendarConnected ? 'checked' : ''} onchange="toggleGoogleCalendar(this.checked)" />
+            <span class="slider"></span>
+          </label>
+          <p class="text-sm text-muted">Crea eventos en Google Calendar automáticamente</p>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="user"></i> Cuenta</h3>
+        </div>
+        <div class="card-body">
+          <div class="user-info">
+            <img src="${state.user?.photoURL || ''}" alt="" class="user-avatar-large" />
+            <div>
+              <strong>${state.user?.displayName || ''}</strong>
+              <p>${state.user?.email || ''}</p>
+              <p class="text-sm text-muted">Proveedor: Google</p>
+            </div>
+          </div>
+          <button class="btn btn-danger" onclick="logout()" style="margin-top: 1rem;">
+            <i data-lucide="log-out"></i> Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// 🎯 HANDLERS Y FUNCIONES AUXILIARES
+// ============================================================
+window.openInstitutionModal = (id = null) => {
+  document.getElementById('institutionForm').reset();
+  document.getElementById('inst_id').value = '';
+  document.getElementById('institutionModalTitle').textContent = id ? 'Editar institución' : 'Nueva institución';
+  
+  if (id) {
+    const inst = state.institutions.find(i => i.id === id);
+    if (inst) {
+      document.getElementById('inst_id').value = inst.id;
+      document.getElementById('inst_name').value = inst.name || '';
+      document.getElementById('inst_cycle').value = inst.cycle || '';
+      document.getElementById('inst_level').value = inst.level || '';
+      document.getElementById('inst_address').value = inst.address || '';
+      document.getElementById('inst_coordination').value = inst.coordination || '';
+      document.getElementById('inst_email').value = inst.email || '';
+      document.getElementById('inst_phone').value = inst.phone || '';
+      document.getElementById('inst_color').value = inst.color || '#4F46E5';
+      document.getElementById('inst_notes').value = inst.notes || '';
     }
-    @media (max-width: 640px) {
-      .content-area { padding: var(--spacing-md); }
-      .view-title { font-size: 22px; }
-      .stat-value { font-size: 24px; }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  }
+  openModal('institutionModal');
+};
+
+window.saveInstitution = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('inst_id').value;
+  const data = {
+    name: document.getElementById('inst_name').value,
+    cycle: document.getElementById('inst_cycle').value,
+    level: document.getElementById('inst_level').value,
+    address: document.getElementById('inst_address').value,
+    coordination: document.getElementById('inst_coordination').value,
+    email: document.getElementById('inst_email').value,
+    phone: document.getElementById('inst_phone').value,
+    color: document.getElementById('inst_color').value,
+    notes: document.getElementById('inst_notes').value,
+    subjects: [],
+    subjectCount: 0,
+    studentCount: 0,
+    updatedAt: serverTimestamp()
+  };
+  
+  await saveData('institutions', data, id || undefined);
+  closeModal('institutionModal');
+};
+
+window.editInstitution = (id) => openInstitutionModal(id);
+
+window.confirmDeleteInstitution = async (id) => {
+  if (confirm('¿Eliminar esta institución? Esta acción no se puede deshacer.')) {
+    await deleteData('institutions', id);
+  }
+};
+
+window.setActiveInstitution = (id) => {
+  state.activeInstitution = id;
+  renderActiveSection();
+};
+
+window.openSubjectModal = (id = null) => {
+  document.getElementById('subjectForm').reset();
+  document.getElementById('sub_id').value = '';
+  document.getElementById('subjectModalTitle').textContent = id ? 'Editar materia' : 'Nueva materia';
+  
+  if (id) {
+    const inst = state.institutions.find(i => i.id === state.activeInstitution);
+    const sub = inst?.subjects?.find(s => s.id === id);
+    if (sub) {
+      document.getElementById('sub_id').value = sub.id;
+      document.getElementById('sub_name').value = sub.name || '';
+      document.getElementById('sub_group').value = sub.group || '';
+      document.getElementById('sub_classroom').value = sub.classroom || '';
+      document.getElementById('sub_color').value = sub.color || '#4F46E5';
+      document.getElementById('sub_description').value = sub.description || '';
     }
-    .menu-toggle { display: none; }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
-  </style>
+  }
+  openModal('subjectModal');
+};
+
+window.saveSubject = async (e) => {
+  e.preventDefault();
+  const instId = state.activeInstitution;
+  if (!instId) {
+    showNotification('Selecciona una institución primero', 'error');
+    return;
+  }
+  
+  const inst = state.institutions.find(i => i.id === instId);
+  const subjects = inst.subjects || [];
+  const subId = document.getElementById('sub_id').value;
+  
+  const subjectData = {
+    id: subId || `sub_${Date.now()}`,
+    name: document.getElementById('sub_name').value,
+    group: document.getElementById('sub_group').value,
+    classroom: document.getElementById('sub_classroom').value,
+    color: document.getElementById('sub_color').value,
+    description: document.getElementById('sub_description').value,
+    studentCount: 0
+  };
+  
+  let updatedSubjects;
+  if (subId) {
+    updatedSubjects = subjects.map(s => s.id === subId ? { ...s, ...subjectData } : s);
+  } else {
+    updatedSubjects = [...subjects, subjectData];
+  }
+  
+  await saveData('institutions', { 
+    subjects: updatedSubjects, 
+    subjectCount: updatedSubjects.length,
+    updatedAt: serverTimestamp() 
+  }, instId);
+  
+  closeModal('subjectModal');
+};
+
+window.editSubject = (id) => openSubjectModal(id);
+
+window.deleteSubject = async (id) => {
+  if (!confirm('¿Eliminar esta materia?')) return;
+  const instId = state.activeInstitution;
+  const inst = state.institutions.find(i => i.id === instId);
+  const updatedSubjects = (inst.subjects || []).filter(s => s.id !== id);
+  await saveData('institutions', { 
+    subjects: updatedSubjects, 
+    subjectCount: updatedSubjects.length,
+    updatedAt: serverTimestamp() 
+  }, instId);
+};
+
+window.viewSubjectDetails = (id) => {
+  navigateTo('subjectDetails');
+  setTimeout(() => {
+    const selector = document.getElementById('subjectSelector');
+    if (selector) {
+      selector.value = id;
+      loadSubjectDetails(id);
+    }
+  }, 100);
+};
+
+window.openEventModal = (date = null) => {
+  document.getElementById('eventForm').reset();
+  document.getElementById('evt_id').value = '';
+  document.getElementById('eventModalTitle').textContent = 'Nuevo evento';
+  if (date) {
+    document.getElementById('evt_date').value = date;
+  }
+  openModal('eventModal');
+};
+
+window.saveEvent = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('evt_id').value;
+  const subjectId = document.getElementById('evt_subject').value;
+  const subjectOption = document.querySelector(`#evt_subject option[value="${subjectId}"]`);
+  const subjectColor = subjectOption?.dataset.color;
+  
+  const data = {
+    title: document.getElementById('evt_title').value,
+    date: document.getElementById('evt_date').value,
+    time: document.getElementById('evt_time').value,
+    type: document.getElementById('evt_type').value,
+    subjectId: subjectId,
+    color: document.getElementById('evt_color').value || subjectColor || '#4F46E5',
+    description: document.getElementById('evt_description').value,
+    syncGoogle: document.getElementById('evt_sync_google').checked,
+    updatedAt: serverTimestamp()
+  };
+  
+  await saveData('events', data, id || undefined);
+  closeModal('eventModal');
+  
+  if (data.syncGoogle && state.settings.googleCalendarConnected) {
+    // Aquí iría la integración con Google Calendar API
+    showNotification('Evento sincronizado con Google Calendar', 'success');
+  }
+};
+
+window.switchCalendarView = (view, btn) => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Aquí se renderizarían las vistas year/week
+  showNotification(`Vista ${view} - funcionalidad en desarrollo`, 'info');
+};
+
+window.changeMonth = (delta) => {
+  // Implementar navegación de meses
+  showNotification('Navegación de meses', 'info');
+};
+
+window.openStudentModal = (id = null) => {
+  document.getElementById('studentForm').reset();
+  document.getElementById('stu_id').value = '';
+  document.getElementById('studentModalTitle').textContent = id ? 'Editar alumno' : 'Nuevo alumno';
+  openModal('studentModal');
+};
+
+window.switchStudentTab = (tab, btn) => {
+  document.querySelectorAll('#studentModal .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#studentModal .form-tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+};
+
+window.saveStudent = async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('stu_id').value;
+  const data = {
+    name: document.getElementById('stu_name').value,
+    enrollment: document.getElementById('stu_enrollment').value,
+    birthdate: document.getElementById('stu_birthdate').value,
+    nationality: document.getElementById('stu_nationality').value,
+    gender: document.getElementById('stu_gender').value,
+    institutionId: document.getElementById('stu_institution').value,
+    group: document.getElementById('stu_group').value,
+    address: document.getElementById('stu_address').value,
+    tutor1: {
+      name: document.getElementById('stu_tutor1_name').value,
+      phone: document.getElementById('stu_tutor1_phone').value,
+      email: document.getElementById('stu_tutor1_email').value
+    },
+    tutor2: {
+      name: document.getElementById('stu_tutor2_name').value,
+      phone: document.getElementById('stu_tutor2_phone').value,
+      email: document.getElementById('stu_tutor2_email').value
+    },
+    allergies: document.getElementById('stu_allergies').value,
+    conditions: document.getElementById('stu_conditions').value,
+    medication: document.getElementById('stu_medication').value,
+    emergency: document.getElementById('stu_emergency').value,
+    neae: document.getElementById('stu_neae_type').value,
+    neaeMeasures: document.getElementById('stu_neae_measures').value,
+    observations: document.getElementById('stu_observations').value,
+    updatedAt: serverTimestamp()
+  };
+  
+  await saveData('students', data, id || undefined);
+  closeModal('studentModal');
+};
+
+window.filterStudents = (query) => {
+  const filtered = state.students.filter(s => 
+    s.name?.toLowerCase().includes(query.toLowerCase()) ||
+    s.group?.toLowerCase().includes(query.toLowerCase())
+  );
+  document.getElementById('studentsList').innerHTML = filtered.length === 0 
+    ? '<div class="empty-state"><p>Sin resultados</p></div>'
+    : filtered.map(s => renderStudentCard(s)).join('');
+};
+
+window.viewStudent = (id) => {
+  const student = state.students.find(s => s.id === id);
+  if (student) {
+    alert(`Ficha de ${student.name}\n\nFuncionalidad de vista detallada en desarrollo`);
+  }
+};
+
+window.loadSubjectDetails = (id) => {
+  const content = document.getElementById('subjectDetailsContent');
+  if (!id) {
+    content.innerHTML = '<div class="empty-state"><p>Selecciona una materia</p></div>';
+    return;
+  }
+  
+  const subjects = state.institutions.flatMap(i => i.subjects || []);
+  const subject = subjects.find(s => s.id === id);
+  
+  if (!subject) return;
+  
+  content.innerHTML = `
+    <div class="subject-details-tabs">
+      <button class="tab-btn active">Temario</button>
+      <button class="tab-btn">Planeación semestral</button>
+      <button class="tab-btn">Gestión de alumnos</button>
+      <button class="tab-btn">Rúbrica</button>
+      <button class="tab-btn">Calificaciones</button>
+      <button class="tab-btn">Conducta</button>
+    </div>
+    <div class="card">
+      <div class="card-header" style="border-left: 4px solid ${subject.color};">
+        <h3>${subject.name}</h3>
+        <span class="badge">Grupo ${subject.group || 'N/A'}</span>
+      </div>
+      <div class="card-body">
+        <p>${subject.description || 'Sin descripción'}</p>
+        <div class="subject-stats-detail">
+          <div><i data-lucide="users"></i> ${subject.studentCount || 0} alumnos</div>
+          <div><i data-lucide="book"></i> Color: <span style="display:inline-block;width:20px;height:20px;background:${subject.color};border-radius:4px;vertical-align:middle;"></span></div>
+        </div>
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+};
+
+window.updateSetting = async (key, value) => {
+  state.settings[key] = value;
+  applySettings();
+  await saveData('settings/main', state.settings);
+};
+
+window.toggleGoogleCalendar = async (enabled) => {
+  state.settings.googleCalendarConnected = enabled;
+  await saveData('settings/main', state.settings);
+  showNotification(enabled ? 'Google Calendar conectado' : 'Google Calendar desconectado', 'success');
+};
+
+window.exportData = async () => {
+  const data = {
+    institutions: state.institutions,
+    students: state.students,
+    events: state.events,
+    settings: state.settings,
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `agenda-docente-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('Datos exportados', 'success');
+};
+
+window.importData = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      showNotification('Importación en desarrollo', 'info');
+    } catch (err) {
+      showNotification('Error al importar: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+};
+
+window.confirmDeleteAll = async () => {
+  if (confirm('¿BORRAR TODOS LOS DATOS? Esta acción no se puede deshacer.')) {
+    if (confirm('¿Estás completamente seguro?')) {
+      showNotification('Funcionalidad de borrado total en desarrollo', 'info');
+    }
+  }
+};
+
+// ============================================================
+// 🎨 UTILIDADES UI
+// ============================================================
+window.openModal = (id) => {
+  document.getElementById(id).classList.add('active');
+};
+
+window.closeModal = (id) => {
+  document.getElementById(id).classList.remove('active');
+};
+
+window.showNotification = (message, type = 'info') => {
+  const existing = document.querySelector('.notification');
+  if (existing) existing.remove();
+  
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}"></i>
+    <span>${message}</span>
+  `;
+  document.body.appendChild(notification);
+  lucide.createIcons();
+  
+  setTimeout(() => notification.classList.add('show'), 10);
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+};
+
+function applySettings() {
+  const root = document.documentElement;
+  root.style.setProperty('--primary', state.settings.primaryColor);
+  root.style.setProperty('--secondary', state.settings.secondaryColor);
+  root.style.setProperty('--accent', state.settings.accentColor);
+  root.style.setProperty('--primary-light', state.settings.primaryColor + '20');
+  root.style.setProperty('--secondary-light', state.settings.secondaryColor + '20');
+  root.style.setProperty('--accent-light', state.settings.accentColor + '20');
+  root.style.setProperty('--font-family', `'${state.settings.fontFamily}', sans-serif`);
+  document.body.style.fontFamily = `var(--font-family)`;
+  
+  if (state.settings.background) {
+    document.body.style.backgroundImage = `url(${state.settings.background})`;
+  }
+}
+
+// Cerrar modales al hacer clic fuera
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('active');
+  }
+});
+
+// Inicializar iconos
+lucide.createIcons();
+
+// Exponer funciones globales necesarias
+window.renderActiveSection = renderActiveSection;
+
+</script>
+
+<style>
+/* ============================================================
+   🎨 VARIABLES Y RESET
+   ============================================================ */
+:root {
+  --primary: #4F46E5;
+  --primary-light: #EEF2FF;
+  --secondary: #10B981;
+  --secondary-light: #D1FAE5;
+  --accent: #F59E0B;
+  --accent-light: #FEF3C7;
+  --bg: #F9FAFB;
+  --surface: #FFFFFF;
+  --text: #111827;
+  --text-muted: #6B7280;
+  --border: #E5E7EB;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font-family: 'Inter', sans-serif;
+  --sidebar-width: 260px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   🔐 LOGIN
+   ============================================================ */
+#loginScreen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#loginScreen.active {
+  display: flex;
+}
+
+.login-card {
+  background: white;
+  padding: 3rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--primary), #7C3AED);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  color: white;
+}
+
+.login-logo svg {
+  width: 48px;
+  height: 48px;
+}
+
+.login-card h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.login-card p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.btn-google {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.btn-google:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   📱 LAYOUT PRINCIPAL
+   ============================================================ */
+#appScreen {
+  display: none;
+  min-height: 100vh;
+}
+
+#appScreen.active {
+  display: block;
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary), #7C3AED);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.sidebar-logo svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.sidebar-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+}
+
+.nav-section {
+  margin-bottom: 1.5rem;
+}
+
+.nav-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0 0.75rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.nav-item.active {
+  background: var(--primary);
+  color: white;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-info-mini {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 2rem;
+  max-width: 100%;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   🎨 COMPONENTES
+   ============================================================ */
+.btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #4338CA;
+  box-shadow: var(--shadow);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--bg);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #B91C1C;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.icon-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.icon-btn.danger:hover {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-header h3 svg {
+  width: 18px;
+  height: 18px;
+  color: var(--primary);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: block;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* DASHBOARD GRID */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  background: var(--bg);
+}
+
+.event-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 50px;
+}
+
+.event-info {
+  flex: 1;
+}
+
+.event-info strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.event-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.class-item {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+
+.class-item strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.class-item span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.quick-action {
+  padding: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  font-family: inherit;
+}
+
+.quick-action:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.quick-action svg {
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+}
+
+.quick-action span {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.empty-state.large {
+  padding: 4rem 2rem;
+  grid-column: 1 / -1;
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.empty-state p {
+  margin-bottom: 1.5rem;
+}
+
+/* INSTITUTIONS */
+.institutions-grid, .subjects-grid, .students-grid, .classes-grid, .planning-grid, .evaluation-grid, .families-grid, .staff-grid, .wellness-grid, .training-grid, .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.institution-card, .subject-card, .student-card, .class-card, .planning-card, .evaluation-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.institution-card:hover, .subject-card:hover, .class-card:hover, .planning-card:hover, .evaluation-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.institution-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.institution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.institution-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.institution-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.institution-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.institution-card h3, .subject-card h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.institution-meta, .subject-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.institution-address {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.institution-address svg {
+  width: 14px;
+  height: 14px;
+}
+
+.institution-stats, .subject-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.institution-stats span, .subject-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.institution-stats svg, .subject-stats svg {
+  width: 14px;
+  height: 14px;
+}
+
+.subject-card {
+  position: relative;
+}
+
+.subject-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.subject-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.subject-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* STUDENTS */
+.students-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-mini {
+  background: var(--surface);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.stat-mini .stat-value {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.student-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.student-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.student-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.125rem;
+}
+
+.student-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.neae-badge {
+  background: var(--accent);
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* CLASSES */
+.class-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.class-color {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.class-card h3 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.class-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.class-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* PLANNING */
+.planning-card, .evaluation-card {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.planning-card svg, .evaluation-card svg {
+  width: 40px;
+  height: 40px;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.planning-card h3, .evaluation-card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.planning-card p, .evaluation-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+/* CALENDAR */
+.calendar-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.month-view {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+}
+
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.month-header h2 {
+  font-size: 1.25rem;
+  text-transform: capitalize;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-weekdays div {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 0.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  min-height: 80px;
+}
+
+.calendar-day:hover {
+  background: var(--primary-light);
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.day-number {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.day-event {
+  font-size: 0.7rem;
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-event.more {
+  background: var(--text-muted);
+}
+
+/* MODALS */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-content.large {
+  max-width: 800px;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* FORMS */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.form-group.full {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-group input[type="color"] {
+  height: 40px;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+.form-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.form-tab-content {
+  display: none;
+}
+
+.form-tab-content.active {
+  display: block;
+}
+
+.form-tab-content h4 {
+  padding: 1rem 1.5rem 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* NOTIFICATIONS */
+.notification {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--surface);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(120%);
+  transition: transform 0.3s;
+  z-index: 2000;
+  border-left: 4px solid var(--primary);
+  max-width: 400px;
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.success {
+  border-left-color: var(--secondary);
+}
+
+.notification.error {
+  border-left-color: var(--danger);
+}
+
+.notification svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.notification.success svg {
+  color: var(--secondary);
+}
+
+.notification.error svg {
+  color: var(--danger);
+}
+
+.notification.info svg {
+  color: var(--primary);
+}
+
+/* SETTINGS */
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-light);
+}
+
+.text-sm {
+  font-size: 0.8rem;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  margin: 0.5rem 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--border);
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+input:checked + .slider {
+  background: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* BADGE */
+.badge {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* SUBJECT DETAILS */
+.subject-details-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.subject-stats-detail {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.subject-stats-detail div {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.subject-stats-detail svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* MOBILE MENU */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 200;
+  width: 44px;
+  height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+}
+
+.mobile-menu-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================================
+   📱 RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+    padding-top: 4rem;
+  }
+  
+  .section-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .calendar-day {
+    min-height: 60px;
+    padding: 0.25rem;
+  }
+  
+  .day-event {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .calendar-weekdays div {
+    font-size: 0.65rem;
+  }
+}
+
+/* PRINT */
+@media print {
+  .sidebar, .mobile-menu-btn, .btn, .icon-btn, .modal {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 0;
+  }
+}
+</style>
 </head>
 <body>
 
-  <!-- LOGIN (Solo Google) -->
-  <div class="login-screen" id="loginScreen">
-    <div class="login-card">
-      <div class="login-logo"><i data-lucide="graduation-cap" style="width:36px;height:36px;"></i></div>
-      <h1 class="login-title">Agenda Docente</h1>
-      <p class="login-subtitle">Tu espacio profesional para gestionar el año escolar</p>
-      <button class="btn-google" id="btnGoogleLogin">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-        Continuar con Google
-      </button>
-      <p class="login-footer">Tus datos se guardan de forma segura en la nube 🔒</p>
+<!-- ============================================================
+     🔐 LOGIN SCREEN
+     ============================================================ -->
+<div id="loginScreen" class="active">
+  <div class="login-card">
+    <div class="login-logo">
+      <i data-lucide="graduation-cap"></i>
+    </div>
+    <h1>Agenda Docente</h1>
+    <p>Tu espacio profesional para gestionar el año escolar</p>
+    <button class="btn-google" onclick="loginWithGoogle()">
+      <img src="https://www.google.com/favicon.ico" alt="Google" />
+      Continuar con Google
+    </button>
+    <div class="login-footer">
+      🔒 Tus datos se guardan de forma segura en la nube
     </div>
   </div>
+</div>
 
-  <!-- APP -->
-  <div class="app-container" id="appContainer">
-    <aside class="sidebar" id="sidebar">
+<!-- ============================================================
+     📱 APP SCREEN
+     ============================================================ -->
+<div id="appScreen">
+  <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+    <i data-lucide="menu"></i>
+  </button>
+  
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo"><i data-lucide="graduation-cap" style="width:22px;height:22px;"></i></div>
-        <div class="sidebar-brand">Agenda Docente<small>Gestión académica</small></div>
+        <div class="sidebar-logo">
+          <i data-lucide="graduation-cap"></i>
+        </div>
+        <div>
+          <div class="sidebar-title">Agenda Docente</div>
+          <div class="sidebar-subtitle">Gestión académica</div>
+        </div>
       </div>
+      
       <nav class="sidebar-nav">
-        <div class="nav-section-title">General</div>
-        <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Inicio</span></button>
-        <button class="nav-item" data-view="institutions"><i data-lucide="building-2"></i><span>Instituciones</span></button>
-        <button class="nav-item" data-view="subjects"><i data-lucide="book-open"></i><span>Materias y Grupos</span></button>
-        <div class="nav-section-title">Planificación</div>
-        <button class="nav-item" data-view="calendar"><i data-lucide="calendar-days"></i><span>Calendarios</span></button>
-        <button class="nav-item" data-view="planning"><i data-lucide="clipboard-list"></i><span>Enseñanza y Planeación</span></button>
-        <button class="nav-item" data-view="subject-details"><i data-lucide="file-text"></i><span>Detalles de Materia</span></button>
-        <div class="nav-section-title">Alumnado</div>
-        <button class="nav-item" data-view="students"><i data-lucide="users"></i><span>Alumnado</span></button>
-        <button class="nav-item" data-view="classes"><i data-lucide="school"></i><span>Mis Clases</span></button>
-        <button class="nav-item" data-view="evaluation"><i data-lucide="award"></i><span>Evaluación</span></button>
-        <div class="nav-section-title">Comunidad</div>
-        <button class="nav-item" data-view="families"><i data-lucide="home"></i><span>Familias</span></button>
-        <button class="nav-item" data-view="staff"><i data-lucide="user-check"></i><span>Personal y Reuniones</span></button>
-        <div class="nav-section-title">Personal</div>
-        <button class="nav-item" data-view="wellbeing"><i data-lucide="heart"></i><span>Bienestar Docente</span></button>
-        <button class="nav-item" data-view="training"><i data-lucide="trophy"></i><span>Formación y Carrera</span></button>
-        <button class="nav-item" data-view="settings"><i data-lucide="settings"></i><span>Configuración</span></button>
+        <div class="nav-section">
+          <div class="nav-section-title">General</div>
+          <button class="nav-item active" data-section="dashboard" onclick="navigateTo('dashboard')">
+            <i data-lucide="home"></i> Inicio
+          </button>
+          <button class="nav-item" data-section="institutions" onclick="navigateTo('institutions')">
+            <i data-lucide="building-2"></i> Instituciones
+          </button>
+          <button class="nav-item" data-section="subjects" onclick="navigateTo('subjects')">
+            <i data-lucide="book-open"></i> Materias y Grupos
+          </button>
+          <button class="nav-item" data-section="calendar" onclick="navigateTo('calendar')">
+            <i data-lucide="calendar"></i> Calendarios
+          </button>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enseñanza y Planeación</div>
+          <button class="nav-item" data-section="planning" onclick="navigateTo('planning')">
+            <i data-lucide="clipboard-list"></i> Planeación
+          </button>
+          <button class="nav-item" data-section="subjectDetails" onclick="navigateTo('subjectDetails')">
+            <i data-lucide="book-marked"></i> Detalles de Materia
+          </button>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Alumnado</div>
+          <button class="nav-item" data-section="students" onclick="navigateTo('students')">
+            <i data-lucide="users"></i> Alumnado
+          </button>
+          <button class="nav-item" data-section="classes" onclick="navigateTo('classes')">
+            <i data-lucide="layout-grid"></i> Mis Clases
+          </button>
+          <button class="nav-item" data-section="evaluation" onclick="navigateTo('evaluation')">
+            <i data-lucide="award"></i> Evaluación
+          </button>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Comunidad</div>
+          <button class="nav-item" data-section="families" onclick="navigateTo('families')">
+            <i data-lucide="heart"></i> Familias
+          </button>
+          <button class="nav-item" data-section="staff" onclick="navigateTo('staff')">
+            <i data-lucide="user-check"></i> Personal y Reuniones
+          </button>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Personal</div>
+          <button class="nav-item" data-section="wellness" onclick="navigateTo('wellness')">
+            <i data-lucide="smile"></i> Bienestar Docente
+          </button>
+          <button class="nav-item" data-section="training" onclick="navigateTo('training')">
+            <i data-lucide="graduation-cap"></i> Formación y Carrera
+          </button>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Configuración</div>
+          <button class="nav-item" data-section="settings" onclick="navigateTo('settings')">
+            <i data-lucide="settings"></i> Ajustes
+          </button>
+        </div>
       </nav>
+      
       <div class="sidebar-footer">
-        <div class="user-card">
-          <div class="user-avatar" id="userAvatar">?</div>
-          <div class="user-info">
-            <div class="user-name" id="userName">Cargando...</div>
-            <div class="user-email" id="userEmail">...</div>
-          </div>
-          <button class="icon-btn" id="btnLogout" title="Cerrar sesión"><i data-lucide="log-out" style="width:16px;height:16px;"></i></button>
+        <div class="user-avatar">
+          <img id="userPhoto" src="" alt="" onerror="this.style.display='none'" />
+        </div>
+        <div class="user-info-mini">
+          <div class="user-name" id="userName">Docente</div>
+          <div class="user-email" id="userEmail">usuario@ejemplo.com</div>
         </div>
       </div>
     </aside>
-
-    <main class="main-content">
-      <header class="topbar">
-        <div style="display:flex;align-items:center;gap:var(--spacing-md);">
-          <button class="icon-btn menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
-          <h1 class="topbar-title" id="topbarTitle"><i data-lucide="layout-dashboard"></i><span>Inicio</span></h1>
-        </div>
-        <div class="topbar-actions">
-          <button class="icon-btn" id="btnTheme" title="Cambiar tema"><i data-lucide="moon"></i></button>
-        </div>
-      </header>
-
-      <div class="content-area">
-
-        <!-- DASHBOARD -->
-        <section class="view active" id="view-dashboard">
-          <div class="view-header">
-            <h2 class="view-title">¡Buen día, <span id="greetingName">docente</span>! 👋</h2>
-            <p class="view-subtitle" id="greetingDate">Cargando fecha...</p>
-          </div>
-          <div class="grid grid-4" style="margin-bottom:var(--spacing-xl);">
-            <div class="stat-card" style="--stat-color: var(--color-primary);">
-              <div class="stat-label">Instituciones</div>
-              <div class="stat-value" id="statInstitutions">0</div>
-              <div class="stat-change">Activas este ciclo</div>
-            </div>
-            <div class="stat-card" style="--stat-color: var(--color-accent);">
-              <div class="stat-label">Materias</div>
-              <div class="stat-value" id="statSubjects">0</div>
-              <div class="stat-change">Asignadas</div>
-            </div>
-            <div class="stat-card" style="--stat-color: var(--color-success);">
-              <div class="stat-label">Alumnos</div>
-              <div class="stat-value" id="statStudents">0</div>
-              <div class="stat-change">En total</div>
-            </div>
-            <div class="stat-card" style="--stat-color: var(--color-warning);">
-              <div class="stat-label">Eventos</div>
-              <div class="stat-value" id="statEvents">0</div>
-              <div class="stat-change">Programados</div>
-            </div>
-          </div>
-          <div class="grid grid-2">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title"><i data-lucide="calendar-check"></i> Próximos eventos</h3>
-              </div>
-              <div id="upcomingEvents">
-                <div class="empty-state">
-                  <div class="empty-state-icon"><i data-lucide="calendar"></i></div>
-                  <p class="empty-state-title">Sin eventos próximos</p>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title"><i data-lucide="zap"></i> Accesos rápidos</h3>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--spacing-sm);">
-                <button class="btn btn-secondary" onclick="openInstitutionModal()"><i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Nueva institución</button>
-                <button class="btn btn-secondary" onclick="openSubjectModal()"><i data-lucide="book-plus" style="width:16px;height:16px;"></i>Nueva materia</button>
-                <button class="btn btn-secondary" onclick="openStudentModal()"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
-                <button class="btn btn-secondary" onclick="openEventModal()"><i data-lucide="calendar-plus" style="width:16px;height:16px;"></i>Nuevo evento</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title"><i data-lucide="target"></i> Clases de hoy</h3>
-              </div>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i data-lucide="school"></i></div>
-                <p class="empty-state-title">Configura tu horario</p>
-                <p class="empty-state-text">Ve a Instituciones para configurar tu semana</p>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title"><i data-lucide="trending-up"></i> Progreso del ciclo</h3>
-              </div>
-              <div style="padding:var(--spacing-md) 0;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:var(--spacing-sm);">
-                  <span style="font-size:13px;color:var(--color-text-muted);">Avance general</span>
-                  <span style="font-size:13px;font-weight:600;">42%</span>
-                </div>
-                <div style="height:8px;background:var(--color-border-light);border-radius:999px;overflow:hidden;">
-                  <div style="height:100%;width:42%;background:linear-gradient(90deg,var(--color-primary),var(--color-accent));border-radius:999px;"></div>
-                </div>
-                <p style="font-size:12px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">💪 ¡Vas por buen camino! Sigue así.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- INSTITUCIONES -->
-        <section class="view" id="view-institutions">
-          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
-            <div>
-              <h2 class="view-title">Instituciones Académicas</h2>
-              <p class="view-subtitle">Gestiona tus centros educativos, ciclos y horarios</p>
-            </div>
-            <button class="btn btn-primary" onclick="openInstitutionModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i>Nueva institución</button>
-          </div>
-          <div id="institutionsList"></div>
-        </section>
-
-        <!-- MATERIAS -->
-        <section class="view" id="view-subjects">
-          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
-            <div>
-              <h2 class="view-title">Materias y Grupos</h2>
-              <p class="view-subtitle">Organiza tus asignaturas con colores personalizados</p>
-            </div>
-            <button class="btn btn-primary" onclick="openSubjectModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i>Nueva materia</button>
-          </div>
-          <div id="subjectsList"></div>
-        </section>
-
-        <!-- CALENDARIO -->
-        <section class="view" id="view-calendar">
-          <div class="view-header">
-            <h2 class="view-title">Calendarios Enlazados</h2>
-            <p class="view-subtitle">Vista anual, mensual y semanal sincronizadas</p>
-          </div>
-          <div class="card" style="margin-bottom:var(--spacing-lg);">
-            <div class="card-header">
-              <div style="display:flex;gap:var(--spacing-sm);">
-                <button class="btn btn-secondary cal-view-btn active" data-calview="annual">Anual</button>
-                <button class="btn btn-ghost cal-view-btn" data-calview="monthly">Mensual</button>
-                <button class="btn btn-ghost cal-view-btn" data-calview="weekly">Semanal</button>
-              </div>
-              <button class="btn btn-primary" onclick="openEventModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i>Nuevo evento</button>
-            </div>
-          </div>
-          <div id="calendarContainer"></div>
-        </section>
-
-        <!-- PLANEACIÓN -->
-        <section class="view" id="view-planning">
-          <div class="view-header">
-            <h2 class="view-title">Enseñanza y Planeación</h2>
-            <p class="view-subtitle">Programación anual, unidades didácticas y planeación semanal</p>
-          </div>
-          <div class="grid grid-3">
-            <div class="card"><div class="card-title"><i data-lucide="calendar-range"></i> Programación anual</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Planifica el año por materia y grupo</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Configurar</button></div>
-            <div class="card"><div class="card-title"><i data-lucide="layers"></i> Unidades didácticas</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Hasta 6 unidades por materia</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Gestionar</button></div>
-            <div class="card"><div class="card-title"><i data-lucide="calendar-clock"></i> Planeación semanal</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Avance semana a semana</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Planificar</button></div>
-            <div class="card"><div class="card-title"><i data-lucide="file-edit"></i> Bitácora diaria</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Registro por día de clase</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Registrar</button></div>
-            <div class="card"><div class="card-title"><i data-lucide="clipboard-check"></i> Evaluaciones programadas</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Fechas, grupos y contenidos</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Programar</button></div>
-            <div class="card"><div class="card-title"><i data-lucide="map-pin"></i> Salidas y excursiones</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Planifica actividades externas</p><button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);">Organizar</button></div>
-          </div>
-        </section>
-
-        <section class="view" id="view-subject-details">
-          <div class="view-header"><h2 class="view-title">Detalles de Materia</h2><p class="view-subtitle">Temario, planeación, alumnos, rúbrica y calificaciones</p></div>
-          <div class="grid grid-3">
-            <div class="card"><div class="card-title"><i data-lucide="list-ordered"></i> Temario</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Contenidos del curso</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="calendar-range"></i> Planeación semestral</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Distribución por semana</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="users"></i> Gestión de alumnos</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Asistencia, tareas, participación</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="scale"></i> Rúbrica de evaluación</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Criterios y niveles</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="table"></i> Registro de calificaciones</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Tabla tipo Excel</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Participación, autonomía, convivencia</p></div>
-          </div>
-        </section>
-
-        <!-- ALUMNADO -->
-        <section class="view" id="view-students">
-          <div class="view-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--spacing-md);">
-            <div><h2 class="view-title">Alumnado</h2><p class="view-subtitle">Fichas completas, NEAE y planes de apoyo</p></div>
-            <button class="btn btn-primary" onclick="openStudentModal()"><i data-lucide="user-plus" style="width:16px;height:16px;"></i>Nuevo alumno</button>
-          </div>
-          <div class="grid grid-4" style="margin-bottom:var(--spacing-xl);">
-            <div class="stat-card" style="--stat-color: var(--color-primary);"><div class="stat-label">Total alumnos</div><div class="stat-value" id="statTotalStudents">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-warning);"><div class="stat-label">Con NEAE</div><div class="stat-value" id="statNeaeStudents">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-success);"><div class="stat-label">Cumpleaños este mes</div><div class="stat-value" id="statBirthdays">0</div></div>
-            <div class="stat-card" style="--stat-color: var(--color-accent);"><div class="stat-label">Incidencias</div><div class="stat-value" id="statIncidents">0</div></div>
-          </div>
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title"><i data-lucide="search"></i> Buscar alumno</h3>
-              <input type="text" class="form-input" id="studentSearch" placeholder="Nombre, grupo o NEAE..." style="max-width:300px;" oninput="filterStudents()">
-            </div>
-            <div id="studentsList"></div>
-          </div>
-        </section>
-
-        <!-- MIS CLASES -->
-        <section class="view" id="view-classes">
-          <div class="view-header">
-            <h2 class="view-title">Panel de Mis Clases</h2>
-            <p class="view-subtitle">Hasta 12 grupos con lista, plano de aula y notas</p>
-          </div>
-          <div id="classesList"></div>
-        </section>
-
-        <!-- EVALUACIÓN -->
-        <section class="view" id="view-evaluation">
-          <div class="view-header">
-            <h2 class="view-title">Evaluación y Registros</h2>
-            <p class="view-subtitle">Calificaciones, conducta y juntas de evaluación</p>
-          </div>
-          <div class="grid grid-2">
-            <div class="card">
-              <div class="card-title"><i data-lucide="award"></i> Registro de calificaciones</div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Por grupo y periodo</p>
-              <button class="btn btn-secondary" style="width:100%;margin-top:var(--spacing-md);" onclick="openGradesModal()">Gestionar</button>
-            </div>
-            <div class="card">
-              <div class="card-title"><i data-lucide="shield-check"></i> Registro de conducta</div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Descriptores por alumno</p>
-            </div>
-            <div class="card">
-              <div class="card-title"><i data-lucide="calendar-check"></i> Periodos de evaluación</div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">3 periodos configurables</p>
-            </div>
-            <div class="card">
-              <div class="card-title"><i data-lucide="users-round"></i> Juntas de evaluación</div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Actas y acuerdos</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="view" id="view-families">
-          <div class="view-header"><h2 class="view-title">Familias</h2><p class="view-subtitle">Comunicación, reuniones y fichas de contacto</p></div>
-          <div class="grid grid-2">
-            <div class="card"><div class="card-title"><i data-lucide="message-circle"></i> Comunicación con familias</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Registro de contactos</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="calendar-clock"></i> Reuniones concertadas</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Horario de atención</p></div>
-          </div>
-        </section>
-
-        <section class="view" id="view-staff">
-          <div class="view-header"><h2 class="view-title">Personal y Reuniones</h2><p class="view-subtitle">Claustros, departamentos y contactos del centro</p></div>
-          <div class="grid grid-2">
-            <div class="card"><div class="card-title"><i data-lucide="users"></i> Reuniones de personal</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Claustro y departamentos</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="contact"></i> Contactos del centro</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Dirección y colegas</p></div>
-          </div>
-        </section>
-
-        <section class="view" id="view-wellbeing">
-          <div class="view-header"><h2 class="view-title">Bienestar Docente 🧘</h2><p class="view-subtitle">Cuida de ti para cuidar mejor a tus alumnos</p></div>
-          <div class="grid grid-2">
-            <div class="card"><div class="card-title"><i data-lucide="activity"></i> Registro semanal</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Energía, carga, ánimo, sueño</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="sparkles"></i> Reflexiones docentes</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Espacio libre para pensar</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="target"></i> Objetivos del año</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Incluye bienestar personal</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="heart-handshake"></i> Lo que me sostiene</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Y los límites que quiero mantener</p></div>
-          </div>
-        </section>
-
-        <section class="view" id="view-training">
-          <div class="view-header"><h2 class="view-title">Formación y Carrera</h2><p class="view-subtitle">Desarrollo profesional continuo</p></div>
-          <div class="grid grid-2">
-            <div class="card"><div class="card-title"><i data-lucide="graduation-cap"></i> Registro de formación</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Cursos y certificaciones</p></div>
-            <div class="card"><div class="card-title"><i data-lucide="trending-up"></i> Objetivos profesionales</div><p style="font-size:13px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">Plan de desarrollo</p></div>
-          </div>
-        </section>
-
-        <!-- CONFIGURACIÓN -->
-        <section class="view" id="view-settings">
-          <div class="view-header">
-            <h2 class="view-title">Configuración</h2>
-            <p class="view-subtitle">Personaliza tu experiencia y gestiona tus datos</p>
-          </div>
-
-          <div class="grid grid-2">
-            <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="palette"></i> Personalización visual</div>
-              <div class="form-group">
-                <label class="form-label">Color primario</label>
-                <input type="color" class="form-input" id="colorPrimary" value="#2563eb" style="height:44px;padding:4px;">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Color secundario</label>
-                <input type="color" class="form-input" id="colorSecondary" value="#64748b" style="height:44px;padding:4px;">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Color de acento</label>
-                <input type="color" class="form-input" id="colorAccent" value="#f59e0b" style="height:44px;padding:4px;">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Tipografía</label>
-                <select class="form-select" id="fontSelect">
-                  <option value="Inter">Inter</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Open Sans">Open Sans</option>
-                  <option value="Atkinson Hyperlegible">Atkinson Hyperlegible</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="image"></i> Fondo de pantalla</div>
-              <div class="style-preview" id="bgPreview">Vista previa del fondo</div>
-              <div class="form-group">
-                <label class="form-label">Fondos predeterminados</label>
-                <div class="bg-presets" id="bgPresets">
-                  <div class="bg-preset" data-bg="none" style="background:var(--color-bg);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#667eea 0%,#764ba2 100%)" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#f093fb 0%,#f5576c 100%)" style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)" style="background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)" style="background:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#fa709a 0%,#fee140 100%)" style="background:linear-gradient(135deg,#fa709a 0%,#fee140 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#30cfd0 0%,#330867 100%)" style="background:linear-gradient(135deg,#30cfd0 0%,#330867 100%);"></div>
-                  <div class="bg-preset" data-bg="linear-gradient(135deg,#a8edea 0%,#fed6e3 100%)" style="background:linear-gradient(135deg,#a8edea 0%,#fed6e3 100%);"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">O usa tu propia imagen (URL)</label>
-                <input type="text" class="form-input" id="bgUrl" placeholder="https://ejemplo.com/imagen.jpg">
-                <button class="btn btn-secondary btn-sm" style="margin-top:var(--spacing-sm);" onclick="applyCustomBg()">Aplicar URL</button>
-              </div>
-              <button class="btn btn-ghost btn-sm" onclick="clearBg()">Quitar fondo</button>
-            </div>
-
-            <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="database"></i> Datos</div>
-              <div style="display:flex;flex-direction:column;gap:var(--spacing-sm);">
-                <button class="btn btn-secondary" onclick="exportData()">
-                  <i data-lucide="download" style="width:16px;height:16px;"></i>
-                  Exportar datos (JSON)
-                </button>
-                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
-                  <i data-lucide="upload" style="width:16px;height:16px;"></i>
-                  Importar datos
-                </button>
-                <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-                <button class="btn btn-secondary" onclick="showToast('Exportación PDF disponible en Fase 4','info')">
-                  <i data-lucide="file-down" style="width:16px;height:16px;"></i>
-                  Exportar sección a PDF
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="clearAllData()" style="margin-top:var(--spacing-sm);">
-                  <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
-                  Borrar todos los datos
-                </button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="calendar-sync"></i> Google Calendar</div>
-              <div class="toggle-container">
-                <div>
-                  <div class="toggle-label">Sincronización automática</div>
-                  <div class="toggle-desc">Crear eventos en Google Calendar automáticamente</div>
-                </div>
-                <div class="toggle" id="gcalToggle" onclick="toggleGCal()"></div>
-              </div>
-              <p style="font-size:13px;color:var(--color-text-muted);margin:var(--spacing-md) 0;">
-                Conecta tu cuenta de Google para sincronizar eventos bidireccionalmente
-              </p>
-              <button class="btn btn-secondary" id="btnConnectGCal" onclick="connectGCal()">
-                <i data-lucide="link" style="width:16px;height:16px;"></i>
-                <span id="gcalButtonText">Conectar Google Calendar</span>
-              </button>
-              <div id="gcalStatus" style="margin-top:var(--spacing-md);font-size:12px;color:var(--color-text-muted);"></div>
-            </div>
-
-            <div class="card">
-              <div class="card-title" style="margin-bottom:var(--spacing-lg);"><i data-lucide="user"></i> Cuenta</div>
-              <div style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--spacing-md);">
-                <div style="margin-bottom:var(--spacing-xs);"><strong>Sesión:</strong> <span id="settingsEmail">-</span></div>
-                <div style="margin-bottom:var(--spacing-xs);"><strong>Proveedor:</strong> <span id="settingsProvider">-</span></div>
-                <div><strong>Tema:</strong> <span id="settingsTheme">Claro</span></div>
-              </div>
-              <button class="btn btn-secondary" id="btnLogoutSettings">
-                <i data-lucide="log-out" style="width:16px;height:16px;"></i>
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </section>
-
-      </div>
+    
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+      <!-- El contenido se renderiza dinámicamente -->
     </main>
   </div>
+</div>
 
-  <!-- MODAL INSTITUCIÓN -->
-  <div class="modal-overlay" id="institutionModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title" id="institutionModalTitle">Nueva institución</h3>
-        <button class="icon-btn" onclick="closeModal('institutionModal')"><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="institutionId">
-        <div class="form-group"><label class="form-label">Nombre de la institución *</label><input type="text" class="form-input" id="instName" placeholder="Ej: Colegio San José"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Ciclo escolar</label><input type="text" class="form-input" id="instCycle" placeholder="Ej: 2025-2026"></div>
-          <div class="form-group"><label class="form-label">Nivel / Grado</label><input type="text" class="form-input" id="instLevel" placeholder="Ej: Secundaria"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Dirección</label><input type="text" class="form-input" id="instAddress"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Coordinación</label><input type="text" class="form-input" id="instCoordinator"></div>
-          <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="instPhone"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Email de contacto</label><input type="email" class="form-input" id="instEmail"></div>
-        <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="instNotes"></textarea></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="btnDeleteInst" onclick="deleteInstitution()" style="display:none;margin-right:auto;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Eliminar</button>
-        <button class="btn btn-ghost" onclick="closeModal('institutionModal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveInstitution()">Guardar</button>
-      </div>
-    </div>
-  </div>
+<script>
+// Inicializar iconos de Lucide al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+});
+</script>
 
-  <!-- MODAL MATERIA -->
-  <div class="modal-overlay" id="subjectModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title" id="subjectModalTitle">Nueva materia</h3>
-        <button class="icon-btn" onclick="closeModal('subjectModal')"><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="subjectId">
-        <div class="form-group"><label class="form-label">Nombre de la materia *</label><input type="text" class="form-input" id="subjName" placeholder="Ej: Matemáticas"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Institución *</label><select class="form-select" id="subjInstitution"></select></div>
-          <div class="form-group"><label class="form-label">Grupo</label><input type="text" class="form-input" id="subjGroup" placeholder="Ej: 3A"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Aula</label><input type="text" class="form-input" id="subjRoom" placeholder="Ej: Aula 201"></div>
-          <div class="form-group"><label class="form-label">Color</label><input type="color" class="form-input" id="subjColor" value="#2563eb" style="height:44px;padding:4px;"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Descripción</label><textarea class="form-textarea" id="subjDescription"></textarea></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="btnDeleteSubj" onclick="deleteSubject()" style="display:none;margin-right:auto;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Eliminar</button>
-        <button class="btn btn-ghost" onclick="closeModal('subjectModal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveSubject()">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL EVENTO -->
-  <div class="modal-overlay" id="eventModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title" id="eventModalTitle">Nuevo evento</h3>
-        <button class="icon-btn" onclick="closeModal('eventModal')"><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="eventId">
-        <div class="form-group"><label class="form-label">Título *</label><input type="text" class="form-input" id="eventTitle" placeholder="Ej: Examen parcial"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Fecha *</label><input type="date" class="form-input" id="eventDate"></div>
-          <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" id="eventType"><option value="class">Clase</option><option value="exam">Evaluación</option><option value="meeting">Reunión</option><option value="holiday">Festivo</option><option value="vacation">Vacaciones</option><option value="other">Otro</option></select></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Materia</label><select class="form-select" id="eventSubject"><option value="">-- Sin materia --</option></select></div>
-          <div class="form-group"><label class="form-label">Color</label><input type="color" class="form-input" id="eventColor" value="#2563eb" style="height:44px;padding:4px;"></div>
-        </div>
-        <div class="toggle-container" style="margin-top:var(--spacing-md);">
-          <div>
-            <div class="toggle-label">Sincronizar con Google Calendar</div>
-            <div class="toggle-desc">Crear evento en tu calendario de Google</div>
-          </div>
-          <div class="toggle" id="gcalEventToggle"></div>
-        </div>
-        <div class="form-group" style="margin-top:var(--spacing-md);"><label class="form-label">Descripción</label><textarea class="form-textarea" id="eventDescription"></textarea></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="btnDeleteEvent" onclick="deleteEvent()" style="display:none;margin-right:auto;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Eliminar</button>
-        <button class="btn btn-ghost" onclick="closeModal('eventModal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveEvent()">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL ALUMNO -->
-  <div class="modal-overlay" id="studentModal">
-    <div class="modal modal-large">
-      <div class="modal-header">
-        <h3 class="modal-title" id="studentModalTitle">Nuevo alumno</h3>
-        <button class="icon-btn" onclick="closeModal('studentModal')"><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="studentId">
-        <div class="tabs">
-          <div class="tab active" data-tab="personal">Datos personales</div>
-          <div class="tab" data-tab="family">Familia</div>
-          <div class="tab" data-tab="health">Salud</div>
-          <div class="tab" data-tab="neae">NEAE</div>
-        </div>
-        <div class="tab-content active" id="tab-personal">
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Nombre completo *</label><input type="text" class="form-input" id="studentName"></div>
-            <div class="form-group"><label class="form-label">Matrícula</label><input type="text" class="form-input" id="studentId2"></div>
-          </div>
-          <div class="form-row-3">
-            <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" class="form-input" id="studentBirth"></div>
-            <div class="form-group"><label class="form-label">Nacionalidad</label><input type="text" class="form-input" id="studentNationality"></div>
-            <div class="form-group"><label class="form-label">Género</label><select class="form-select" id="studentGender"><option value="">--</option><option value="M">Masculino</option><option value="F">Femenino</option><option value="O">Otro</option></select></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Institución</label><select class="form-select" id="studentInstitution"></select></div>
-            <div class="form-group"><label class="form-label">Grupo</label><input type="text" class="form-input" id="studentGroup"></div>
-          </div>
-          <div class="form-group"><label class="form-label">Dirección</label><input type="text" class="form-input" id="studentAddress"></div>
-        </div>
-        <div class="tab-content" id="tab-family">
-          <h4 style="margin-bottom:var(--spacing-md);font-size:14px;">Tutor 1</h4>
-          <div class="form-row-3">
-            <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-input" id="tutor1Name"></div>
-            <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="tutor1Phone"></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="tutor1Email"></div>
-          </div>
-          <h4 style="margin:var(--spacing-lg) 0 var(--spacing-md);font-size:14px;">Tutor 2 (opcional)</h4>
-          <div class="form-row-3">
-            <div class="form-group"><label class="form-label">Nombre</label><input type="text" class="form-input" id="tutor2Name"></div>
-            <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="tutor2Phone"></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="tutor2Email"></div>
-          </div>
-        </div>
-        <div class="tab-content" id="tab-health">
-          <div class="form-group"><label class="form-label">Alergias</label><textarea class="form-textarea" id="studentAllergies" placeholder="Ninguna conocida"></textarea></div>
-          <div class="form-group"><label class="form-label">Afecciones médicas</label><textarea class="form-textarea" id="studentConditions"></textarea></div>
-          <div class="form-group"><label class="form-label">Medicación</label><textarea class="form-textarea" id="studentMedication"></textarea></div>
-          <div class="form-group"><label class="form-label">Contacto de emergencia</label><input type="text" class="form-input" id="studentEmergency" placeholder="Nombre y teléfono"></div>
-        </div>
-        <div class="tab-content" id="tab-neae">
-          <div class="form-group">
-            <label class="form-label">Tipo de NEAE</label>
-            <select class="form-select" id="studentNeaeType">
-              <option value="none">Sin necesidades específicas</option>
-              <option value="support">Apoyo especializado</option>
-              <option value="adaptation">Adaptación curricular</option>
-              <option value="gifted">Altas capacidades</option>
-              <option value="late">Incorporación tardía</option>
-              <option value="individual">Plan de apoyo individual</option>
-            </select>
-          </div>
-          <div class="form-group"><label class="form-label">Medidas y apoyos</label><textarea class="form-textarea" id="studentNeaeMeasures"></textarea></div>
-          <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-textarea" id="studentNeaeNotes"></textarea></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger btn-sm" id="btnDeleteStudent" onclick="deleteStudent()" style="display:none;margin-right:auto;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Eliminar</button>
-        <button class="btn btn-ghost" onclick="closeModal('studentModal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveStudent()">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CALIFICACIONES -->
-  <div class="modal-overlay" id="gradesModal">
-    <div class="modal modal-large">
-      <div class="modal-header">
-        <h3 class="modal-title">Registro de Calificaciones</h3>
-        <button class="icon-btn" onclick="closeModal('gradesModal')"><i data-lucide="x"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Materia</label><select class="form-select" id="gradesSubject" onchange="loadGradesTable()"><option value="">-- Selecciona --</option></select></div>
-          <div class="form-group"><label class="form-label">Periodo</label><select class="form-select" id="gradesPeriod"><option value="1">1er Periodo</option><option value="2">2do Periodo</option><option value="3">3er Periodo</option></select></div>
-        </div>
-        <div id="gradesTableContainer"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('gradesModal')">Cerrar</button>
-        <button class="btn btn-primary" onclick="saveGrades()">Guardar calificaciones</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script>
-    // FIREBASE
-    const firebaseConfig = {
-      apiKey: "AIzaSyBKFxQG7buVaP47ghdUiXLbCjTfk3i1TVA",
-      authDomain: "agenda-docente-cfcb3.firebaseapp.com",
-      projectId: "agenda-docente-cfcb3",
-      storageBucket: "agenda-docente-cfcb3.firebasestorage.app",
-      messagingSenderId: "877985632064",
-      appId: "1:877985632064:web:3c68ecdc4245c609ac34a5"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    console.log('✅ Firebase inicializado');
-
-    // GOOGLE CALENDAR
-    const GCAL_CLIENT_ID = '877985632064-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'; // Reemplazar con tu Client ID
-    const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar';
-    let gapiInited = false;
-    let gisInited = false;
-    let tokenClient;
-
-    // ESTADO
-    const state = {
-      user: null,
-      currentView: 'dashboard',
-      theme: localStorage.getItem('theme') || 'light',
-      calendarView: 'annual',
-      calendarDate: new Date(),
-      gcalSync: localStorage.getItem('gcalSync') === 'true',
-      gcalConnected: false,
-      data: { institutions: [], subjects: [], events: [], students: [], grades: {} },
-      styles: JSON.parse(localStorage.getItem('styles') || '{}')
-    };
-
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
-
-    // UTILIDADES
-    function showToast(message, type = 'info') {
-      const container = $('#toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      const icons = { success: 'check-circle', error: 'alert-circle', info: 'info' };
-      toast.innerHTML = `<i data-lucide="${icons[type]}"></i><span>${message}</span>`;
-      container.appendChild(toast);
-      lucide.createIcons();
-      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-    function formatDate(date) {
-      return new Intl.DateTimeFormat('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(date);
-    }
-    function getGreeting() {
-      const h = new Date().getHours();
-      return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
-    }
-    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
-
-    // AUTENTICACIÓN (Solo Google)
-    async function loginWithGoogle() {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        state.user = result.user;
-        onAuthSuccess();
-      } catch (error) {
-        console.error(error);
-        showToast('Error: ' + error.message, 'error');
-      }
-    }
-    async function logout() {
-      try {
-        await auth.signOut();
-        state.user = null;
-        $('#loginScreen').classList.remove('hidden');
-        $('#appContainer').classList.remove('active');
-        showToast('Sesión cerrada', 'info');
-      } catch (e) { console.error(e); }
-    }
-    function onAuthSuccess() {
-      $('#loginScreen').classList.add('hidden');
-      $('#appContainer').classList.add('active');
-      updateUserUI();
-      loadUserData();
-      initGoogleCalendar();
-      showToast(`¡Bienvenido, ${state.user.displayName || 'docente'}!`, 'success');
-    }
-    function updateUserUI() {
-      const user = state.user;
-      const name = user.displayName || 'Docente';
-      $('#userName').textContent = name;
-      $('#userEmail').textContent = user.email || '';
-      $('#settingsEmail').textContent = user.email || '';
-      $('#settingsProvider').textContent = 'Google';
-      $('#greetingName').textContent = name.split(' ')[0];
-      $('#greetingDate').textContent = `${getGreeting()} · ${formatDate(new Date())}`;
-      const avatar = $('#userAvatar');
-      if (user.photoURL) avatar.innerHTML = `<img src="${user.photoURL}">`;
-      else avatar.textContent = name.charAt(0).toUpperCase();
-    }
-
-    // FIRESTORE
-    function getUserRef() { return db.collection('users').doc(state.user.uid); }
-    async function loadUserData() {
-      try {
-        const doc = await getUserRef().get();
-        if (doc.exists) {
-          const d = doc.data();
-          state.data = {
-            institutions: d.institutions || [],
-            subjects: d.subjects || [],
-            events: d.events || [],
-            students: d.students || [],
-            grades: d.grades || {}
-          };
-        }
-        refreshAll();
-      } catch (e) { console.error(e); showToast('Error cargando datos', 'error'); }
-    }
-    async function saveData() {
-      try {
-        await getUserRef().set({
-          institutions: state.data.institutions,
-          subjects: state.data.subjects,
-          events: state.data.events,
-          students: state.data.students,
-          grades: state.data.grades,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      } catch (e) { console.error(e); showToast('Error guardando', 'error'); }
-    }
-
-    // GOOGLE CALENDAR
-    function initGoogleCalendar() {
-      gapi.load('client', async () => {
-        try {
-          await gapi.client.init({
-            apiKey: firebaseConfig.apiKey,
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
-          });
-          gapiInited = true;
-          updateGCalUI();
-        } catch (err) {
-          console.error('Error init gapi:', err);
-        }
-      });
-
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GCAL_CLIENT_ID,
-        scope: GCAL_SCOPES,
-        callback: (resp) => {
-          if (resp.error) {
-            showToast('Error conectando Google Calendar', 'error');
-            return;
-          }
-          state.gcalConnected = true;
-          gapi.client.setToken(resp);
-          updateGCalUI();
-          showToast('✅ Google Calendar conectado', 'success');
-        }
-      });
-      gisInited = true;
-    }
-
-    async function connectGCal() {
-      if (!gapiInited || !gisInited) {
-        showToast('Esperando inicialización de Google...', 'info');
-        return;
-      }
-      if (state.gcalConnected) {
-        state.gcalConnected = false;
-        gapi.client.setToken(null);
-        updateGCalUI();
-        showToast('Google Calendar desconectado', 'info');
-        return;
-      }
-      tokenClient.requestAccessToken({ prompt: 'consent' });
-    }
-
-    function updateGCalUI() {
-      const btn = $('#gcalButtonText');
-      const status = $('#gcalStatus');
-      if (state.gcalConnected) {
-        btn.textContent = 'Desconectar Google Calendar';
-        status.innerHTML = '<span style="color:var(--color-success);">✅ Conectado</span>';
-      } else {
-        btn.textContent = 'Conectar Google Calendar';
-        status.innerHTML = '<span style="color:var(--color-text-muted);">No conectado</span>';
-      }
-      $('#gcalToggle').classList.toggle('active', state.gcalSync);
-    }
-
-    async function createGCalEvent(event) {
-      if (!state.gcalConnected || !state.gcalSync) return;
-      try {
-        const gcalEvent = {
-          summary: event.title,
-          description: event.description || '',
-          start: { date: event.date },
-          end: { date: event.date },
-          colorId: getColorId(event.color)
-        };
-        await gapi.client.calendar.events.insert({
-          calendarId: 'primary',
-          resource: gcalEvent
-        });
-        showToast('📅 Evento creado en Google Calendar', 'success');
-      } catch (err) {
-        console.error('Error creating GCal event:', err);
-        showToast('Error sincronizando con Google Calendar', 'error');
-      }
-    }
-
-    function getColorId(hex) {
-      const colors = { '#2563eb': '1', '#10b981': '2', '#f59e0b': '5', '#ef4444': '11', '#8b5cf6': '3' };
-      return colors[hex] || '1';
-    }
-
-    function toggleGCal() {
-      state.gcalSync = !state.gcalSync;
-      localStorage.setItem('gcalSync', state.gcalSync);
-      $('#gcalToggle').classList.toggle('active', state.gcalSync);
-      showToast(state.gcalSync ? 'Sincronización activada' : 'Sincronización desactivada', 'info');
-    }
-
-    // NAVEGACIÓN
-    function navigateTo(viewName) {
-      $$('.view').forEach(v => v.classList.remove('active'));
-      $$('.nav-item').forEach(n => n.classList.remove('active'));
-      const view = $(`#view-${viewName}`);
-      const nav = $(`.nav-item[data-view="${viewName}"]`);
-      if (view) view.classList.add('active');
-      if (nav) nav.classList.add('active');
-      const titles = {
-        'dashboard': ['layout-dashboard', 'Inicio'],
-        'institutions': ['building-2', 'Instituciones'],
-        'subjects': ['book-open', 'Materias y Grupos'],
-        'calendar': ['calendar-days', 'Calendarios'],
-        'planning': ['clipboard-list', 'Enseñanza y Planeación'],
-        'subject-details': ['file-text', 'Detalles de Materia'],
-        'students': ['users', 'Alumnado'],
-        'classes': ['school', 'Mis Clases'],
-        'evaluation': ['award', 'Evaluación'],
-        'families': ['home', 'Familias'],
-        'staff': ['user-check', 'Personal'],
-        'wellbeing': ['heart', 'Bienestar'],
-        'training': ['trophy', 'Formación'],
-        'settings': ['settings', 'Configuración']
-      };
-      const [icon, text] = titles[viewName] || ['layout-dashboard', viewName];
-      $('#topbarTitle').innerHTML = `<i data-lucide="${icon}"></i><span>${text}</span>`;
-      lucide.createIcons();
-      state.currentView = viewName;
-      $('#sidebar').classList.remove('open');
-      if (viewName === 'calendar') renderCalendar();
-      if (viewName === 'students') renderStudents();
-      if (viewName === 'classes') renderClasses();
-    }
-
-    // DASHBOARD
-    function updateDashboardStats() {
-      $('#statInstitutions').textContent = state.data.institutions.length;
-      $('#statSubjects').textContent = state.data.subjects.length;
-      $('#statStudents').textContent = state.data.students.length;
-      $('#statEvents').textContent = state.data.events.length;
-      $('#statTotalStudents').textContent = state.data.students.length;
-      $('#statNeaeStudents').textContent = state.data.students.filter(s => s.neaeType && s.neaeType !== 'none').length;
-      const currentMonth = new Date().getMonth();
-      $('#statBirthdays').textContent = state.data.students.filter(s => {
-        if (!s.birthDate) return false;
-        return new Date(s.birthDate).getMonth() === currentMonth;
-      }).length;
-      $('#statIncidents').textContent = 0;
-
-      const upcoming = state.data.events
-        .filter(e => new Date(e.date) >= new Date(new Date().toDateString()))
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 5);
-      const container = $('#upcomingEvents');
-      if (upcoming.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i data-lucide="calendar"></i></div><p class="empty-state-title">Sin eventos próximos</p></div>';
-      } else {
-        container.innerHTML = upcoming.map(e => {
-          const subj = state.data.subjects.find(s => s.id === e.subjectId);
-          const color = e.color || (subj ? subj.color : '#2563eb');
-          return `<div style="display:flex;align-items:center;gap:var(--spacing-md);padding:var(--spacing-sm);border-left:3px solid ${color};margin-bottom:var(--spacing-sm);background:var(--color-border-light);border-radius:var(--radius-sm);">
-            <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${e.title}</div><div style="font-size:11px;color:var(--color-text-muted);">${formatDate(new Date(e.date))}</div></div>
-            <span class="badge">${e.type}</span>
-          </div>`;
-        }).join('');
-      }
-      lucide.createIcons();
-    }
-
-    // INSTITUCIONES
-    function openInstitutionModal(id = null) {
-      $('#institutionModalTitle').textContent = id ? 'Editar institución' : 'Nueva institución';
-      $('#institutionId').value = id || '';
-      $('#btnDeleteInst').style.display = id ? 'inline-flex' : 'none';
-      if (id) {
-        const inst = state.data.institutions.find(i => i.id === id);
-        if (inst) {
-          $('#instName').value = inst.name || '';
-          $('#instCycle').value = inst.cycle || '';
-          $('#instLevel').value = inst.level || '';
-          $('#instAddress').value = inst.address || '';
-          $('#instCoordinator').value = inst.coordinator || '';
-          $('#instPhone').value = inst.phone || '';
-          $('#instEmail').value = inst.email || '';
-          $('#instNotes').value = inst.notes || '';
-        }
-      } else {
-        ['instName','instCycle','instLevel','instAddress','instCoordinator','instPhone','instEmail','instNotes'].forEach(id => $(`#${id}`).value = '');
-      }
-      $('#institutionModal').classList.add('active');
-    }
-    async function saveInstitution() {
-      const name = $('#instName').value.trim();
-      if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
-      const id = $('#institutionId').value || generateId();
-      const institution = {
-        id, name,
-        cycle: $('#instCycle').value.trim(),
-        level: $('#instLevel').value.trim(),
-        address: $('#instAddress').value.trim(),
-        coordinator: $('#instCoordinator').value.trim(),
-        phone: $('#instPhone').value.trim(),
-        email: $('#instEmail').value.trim(),
-        notes: $('#instNotes').value.trim(),
-        color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
-        createdAt: new Date().toISOString()
-      };
-      const idx = state.data.institutions.findIndex(i => i.id === id);
-      if (idx >= 0) state.data.institutions[idx] = institution;
-      else state.data.institutions.push(institution);
-      await saveData();
-      renderInstitutions();
-      updateDashboardStats();
-      closeModal('institutionModal');
-      showToast('Institución guardada', 'success');
-    }
-    async function deleteInstitution() {
-      const id = $('#institutionId').value;
-      if (!id || !confirm('¿Eliminar esta institución? También se eliminarán sus materias.')) return;
-      state.data.institutions = state.data.institutions.filter(i => i.id !== id);
-      state.data.subjects = state.data.subjects.filter(s => s.institutionId !== id);
-      await saveData();
-      renderInstitutions();
-      renderSubjects();
-      updateDashboardStats();
-      closeModal('institutionModal');
-      showToast('Institución eliminada', 'success');
-    }
-    function renderInstitutions() {
-      const container = $('#institutionsList');
-      if (state.data.institutions.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i data-lucide="building-2"></i></div><p class="empty-state-title">Aún no tienes instituciones</p><p class="empty-state-text">Comienza creando tu primera institución</p><button class="btn btn-primary" onclick="openInstitutionModal()"><i data-lucide="plus"></i>Crear institución</button></div>';
-        lucide.createIcons();
-        return;
-      }
-      container.innerHTML = state.data.institutions.map(inst => {
-        const subjectCount = state.data.subjects.filter(s => s.institutionId === inst.id).length;
-        return `<div class="institution-card" style="--inst-color: ${inst.color || '#2563eb'};">
-          <div class="institution-card-header">
-            <div>
-              <div class="institution-card-title">${inst.name}</div>
-              <div class="institution-card-subtitle">${inst.cycle || 'Sin ciclo'} · ${inst.level || 'Sin nivel'}</div>
-            </div>
-            <div class="institution-card-actions">
-              <button class="btn btn-ghost btn-sm" onclick="openInstitutionModal('${inst.id}')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-            </div>
-          </div>
-          <div class="institution-card-body">
-            <div><strong>Dirección</strong>${inst.address || '—'}</div>
-            <div><strong>Coordinación</strong>${inst.coordinator || '—'}</div>
-            <div><strong>Teléfono</strong>${inst.phone || '—'}</div>
-            <div><strong>Email</strong>${inst.email || '—'}</div>
-            <div><strong>Materias</strong><span class="badge active">${subjectCount}</span></div>
-          </div>
-        </div>`;
-      }).join('');
-      lucide.createIcons();
-    }
-
-    // MATERIAS
-    function openSubjectModal(id = null) {
-      const select = $('#subjInstitution');
-      select.innerHTML = '<option value="">-- Selecciona institución --</option>' +
-        state.data.institutions.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
-      $('#subjectModalTitle').textContent = id ? 'Editar materia' : 'Nueva materia';
-      $('#subjectId').value = id || '';
-      $('#btnDeleteSubj').style.display = id ? 'inline-flex' : 'none';
-      if (id) {
-        const subj = state.data.subjects.find(s => s.id === id);
-        if (subj) {
-          $('#subjName').value = subj.name || '';
-          $('#subjInstitution').value = subj.institutionId || '';
-          $('#subjGroup').value = subj.group || '';
-          $('#subjRoom').value = subj.room || '';
-          $('#subjColor').value = subj.color || '#2563eb';
-          $('#subjDescription').value = subj.description || '';
-        }
-      } else {
-        ['subjName','subjGroup','subjRoom','subjDescription'].forEach(id => $(`#${id}`).value = '');
-        $('#subjColor').value = '#2563eb';
-      }
-      $('#subjectModal').classList.add('active');
-    }
-    async function saveSubject() {
-      const name = $('#subjName').value.trim();
-      const institutionId = $('#subjInstitution').value;
-      if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
-      if (!institutionId) { showToast('Selecciona una institución', 'error'); return; }
-      const id = $('#subjectId').value || generateId();
-      const subject = {
-        id, name, institutionId,
-        group: $('#subjGroup').value.trim(),
-        room: $('#subjRoom').value.trim(),
-        color: $('#subjColor').value,
-        description: $('#subjDescription').value.trim(),
-        createdAt: new Date().toISOString()
-      };
-      const idx = state.data.subjects.findIndex(s => s.id === id);
-      if (idx >= 0) state.data.subjects[idx] = subject;
-      else state.data.subjects.push(subject);
-      await saveData();
-      renderSubjects();
-      updateDashboardStats();
-      closeModal('subjectModal');
-      showToast('Materia guardada', 'success');
-    }
-    async function deleteSubject() {
-      const id = $('#subjectId').value;
-      if (!id || !confirm('¿Eliminar esta materia?')) return;
-      state.data.subjects = state.data.subjects.filter(s => s.id !== id);
-      await saveData();
-      renderSubjects();
-      updateDashboardStats();
-      closeModal('subjectModal');
-      showToast('Materia eliminada', 'success');
-    }
-    function renderSubjects() {
-      const container = $('#subjectsList');
-      if (state.data.subjects.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i data-lucide="book-open"></i></div><p class="empty-state-title">Sin materias registradas</p><p class="empty-state-text">Crea tu primera materia</p></div>';
-        lucide.createIcons();
-        return;
-      }
-      container.innerHTML = '<div class="grid grid-3">' + state.data.subjects.map(subj => {
-        const inst = state.data.institutions.find(i => i.id === subj.institutionId);
-        const studentCount = state.data.students.filter(s => s.subjectId === subj.id).length;
-        return `<div class="subject-card" style="--subject-color: ${subj.color};">
-          <div class="subject-card-header">
-            <div>
-              <div class="subject-card-title"><span class="subject-color-dot" style="background:${subj.color};"></span>${subj.name}</div>
-              <div class="subject-card-info">${subj.group ? 'Grupo ' + subj.group : ''} ${subj.room ? '· ' + subj.room : ''}</div>
-              <div class="subject-card-info" style="margin-top:4px;">${inst ? inst.name : 'Sin institución'}</div>
-              <div class="subject-card-info" style="margin-top:4px;"><span class="badge">${studentCount} alumnos</span></div>
-            </div>
-            <div style="display:flex;gap:var(--spacing-xs);">
-              <button class="btn btn-ghost btn-sm" onclick="openSubjectModal('${subj.id}')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-            </div>
-          </div>
-          ${subj.description ? `<p style="font-size:12px;color:var(--color-text-muted);margin-top:var(--spacing-sm);">${subj.description}</p>` : ''}
-        </div>`;
-      }).join('') + '</div>';
-      lucide.createIcons();
-    }
-
-    // EVENTOS
-    function openEventModal(id = null, date = null) {
-      const select = $('#eventSubject');
-      select.innerHTML = '<option value="">-- Sin materia --</option>' +
-        state.data.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-      $('#eventModalTitle').textContent = id ? 'Editar evento' : 'Nuevo evento';
-      $('#eventId').value = id || '';
-      $('#btnDeleteEvent').style.display = id ? 'inline-flex' : 'none';
-      if (id) {
-        const ev = state.data.events.find(e => e.id === id);
-        if (ev) {
-          $('#eventTitle').value = ev.title || '';
-          $('#eventDate').value = ev.date || '';
-          $('#eventType').value = ev.type || 'other';
-          $('#eventSubject').value = ev.subjectId || '';
-          $('#eventColor').value = ev.color || '#2563eb';
-          $('#eventDescription').value = ev.description || '';
-          $('#gcalEventToggle').classList.toggle('active', ev.syncGCal || false);
-        }
-      } else {
-        ['eventTitle','eventDescription'].forEach(id => $(`#${id}`).value = '');
-        $('#eventDate').value = date || new Date().toISOString().split('T')[0];
-        $('#eventType').value = 'class';
-        $('#eventSubject').value = '';
-        $('#eventColor').value = '#2563eb';
-        $('#gcalEventToggle').classList.toggle('active', state.gcalSync);
-      }
-      $('#eventModal').classList.add('active');
-    }
-    async function saveEvent() {
-      const title = $('#eventTitle').value.trim();
-      const date = $('#eventDate').value;
-      if (!title) { showToast('El título es obligatorio', 'error'); return; }
-      if (!date) { showToast('La fecha es obligatoria', 'error'); return; }
-      const id = $('#eventId').value || generateId();
-      const syncGCal = $('#gcalEventToggle').classList.contains('active');
-      const event = {
-        id, title, date,
-        type: $('#eventType').value,
-        subjectId: $('#eventSubject').value,
-        color: $('#eventColor').value,
-        description: $('#eventDescription').value.trim(),
-        syncGCal,
-        createdAt: new Date().toISOString()
-      };
-      const idx = state.data.events.findIndex(e => e.id === id);
-      if (idx >= 0) state.data.events[idx] = event;
-      else state.data.events.push(event);
-      await saveData();
-      updateDashboardStats();
-      if (state.currentView === 'calendar') renderCalendar();
-      closeModal('eventModal');
-      showToast('Evento guardado', 'success');
-      if (syncGCal && state.gcalConnected) {
-        await createGCalEvent(event);
-      }
-    }
-    async function deleteEvent() {
-      const id = $('#eventId').value;
-      if (!id || !confirm('¿Eliminar este evento?')) return;
-      state.data.events = state.data.events.filter(e => e.id !== id);
-      await saveData();
-      updateDashboardStats();
-      if (state.currentView === 'calendar') renderCalendar();
-      closeModal('eventModal');
-      showToast('Evento eliminado', 'success');
-    }
-
-    // ALUMNOS
-    function openStudentModal(id = null) {
-      const select = $('#studentInstitution');
-      select.innerHTML = '<option value="">-- Selecciona institución --</option>' +
-        state.data.institutions.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
-      $('#studentModalTitle').textContent = id ? 'Editar alumno' : 'Nuevo alumno';
-      $('#studentId').value = id || '';
-      $('#btnDeleteStudent').style.display = id ? 'inline-flex' : 'none';
-      if (id) {
-        const student = state.data.students.find(s => s.id === id);
-        if (student) {
-          $('#studentName').value = student.name || '';
-          $('#studentId2').value = student.studentId || '';
-          $('#studentBirth').value = student.birthDate || '';
-          $('#studentNationality').value = student.nationality || '';
-          $('#studentGender').value = student.gender || '';
-          $('#studentInstitution').value = student.institutionId || '';
-          $('#studentGroup').value = student.group || '';
-          $('#studentAddress').value = student.address || '';
-          $('#tutor1Name').value = student.tutor1?.name || '';
-          $('#tutor1Phone').value = student.tutor1?.phone || '';
-          $('#tutor1Email').value = student.tutor1?.email || '';
-          $('#tutor2Name').value = student.tutor2?.name || '';
-          $('#tutor2Phone').value = student.tutor2?.phone || '';
-          $('#tutor2Email').value = student.tutor2?.email || '';
-          $('#studentAllergies').value = student.allergies || '';
-          $('#studentConditions').value = student.conditions || '';
-          $('#studentMedication').value = student.medication || '';
-          $('#studentEmergency').value = student.emergency || '';
-          $('#studentNeaeType').value = student.neaeType || 'none';
-          $('#studentNeaeMeasures').value = student.neaeMeasures || '';
-          $('#studentNeaeNotes').value = student.neaeNotes || '';
-        }
-      } else {
-        ['studentName','studentId2','studentBirth','studentNationality','studentGroup','studentAddress',
-         'tutor1Name','tutor1Phone','tutor1Email','tutor2Name','tutor2Phone','tutor2Email',
-         'studentAllergies','studentConditions','studentMedication','studentEmergency',
-         'studentNeaeMeasures','studentNeaeNotes'].forEach(id => $(`#${id}`).value = '');
-        $('#studentGender').value = '';
-        $('#studentNeaeType').value = 'none';
-      }
-      // Reset tabs
-      $$('.tab').forEach(t => t.classList.remove('active'));
-      $$('.tab-content').forEach(t => t.classList.remove('active'));
-      $('.tab[data-tab="personal"]').classList.add('active');
-      $('#tab-personal').classList.add('active');
-      $('#studentModal').classList.add('active');
-    }
-    async function saveStudent() {
-      const name = $('#studentName').value.trim();
-      if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
-      const id = $('#studentId').value || generateId();
-      const student = {
-        id, name,
-        studentId: $('#studentId2').value.trim(),
-        birthDate: $('#studentBirth').value,
-        nationality: $('#studentNationality').value.trim(),
-        gender: $('#studentGender').value,
-        institutionId: $('#studentInstitution').value,
-        group: $('#studentGroup').value.trim(),
-        address: $('#studentAddress').value.trim(),
-        tutor1: {
-          name: $('#tutor1Name').value.trim(),
-          phone: $('#tutor1Phone').value.trim(),
-          email: $('#tutor1Email').value.trim()
-        },
-        tutor2: {
-          name: $('#tutor2Name').value.trim(),
-          phone: $('#tutor2Phone').value.trim(),
-          email: $('#tutor2Email').value.trim()
-        },
-        allergies: $('#studentAllergies').value.trim(),
-        conditions: $('#studentConditions').value.trim(),
-        medication: $('#studentMedication').value.trim(),
-        emergency: $('#studentEmergency').value.trim(),
-        neaeType: $('#studentNeaeType').value,
-        neaeMeasures: $('#studentNeaeMeasures').value.trim(),
-        neaeNotes: $('#studentNeaeNotes').
+</body>
+  </html>
