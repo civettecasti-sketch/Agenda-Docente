@@ -17,12 +17,12 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && isOwner(userId);
       
       // Perfil del usuario
-      match /profile {
+      match /profile/{document=**} {
         allow read, write: if isAuthenticated() && isOwner(userId);
       }
       
       // Configuración
-      match /settings {
+      match /settings/{document=**} {
         allow read, write: if isAuthenticated() && isOwner(userId);
       }
       
@@ -30,30 +30,48 @@ service cloud.firestore {
       match /institutions/{institutionId} {
         allow read, write: if isAuthenticated() && isOwner(userId);
         
-        // Info de la institución
-        match /info {
+        // Subcolecciones de instituciones (materias, etc.)
+        match /{document=**} {
           allow read, write: if isAuthenticated() && isOwner(userId);
         }
+      }
+      
+      // Materias (si se guardan como colección independiente)
+      match /subjects/{subjectId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
         
-        // Horario
-        match /schedule {
+        match /{document=**} {
           allow read, write: if isAuthenticated() && isOwner(userId);
         }
+      }
+      
+      // Alumnos
+      match /students/{studentId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
         
-        // Materias
-        match /subjects/{subjectId} {
-          allow read, write: if isAuthenticated() && isOwner(userId);
-          
-          // Subcolecciones de cada materia
-          match /{document=**} {
-            allow read, write: if isAuthenticated() && isOwner(userId);
-          }
-        }
-        
-        // Eventos, logs, contactos familiares
-        match /{collectionId} {
+        match /{document=**} {
           allow read, write: if isAuthenticated() && isOwner(userId);
         }
+      }
+      
+      // Eventos
+      match /events/{eventId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+      
+      // Bitácoras/Logs
+      match /logs/{logId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+      
+      // Contactos familiares
+      match /familyContacts/{contactId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+      
+      // Cualquier otra subcolección del usuario
+      match /{collectionId}/{document=**} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
       }
     }
     
