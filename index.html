@@ -406,14 +406,16 @@ function renderSidebar() {
       <button class="nav-item ${state.currentSection==='startHere'?'active':''}" data-section="startHere" onclick="navigateTo('startHere')"><i data-lucide="play-circle"></i><span>Empieza aquí</span></button>
       <button class="nav-item ${state.currentSection==='dashboard'?'active':''}" data-section="dashboard" onclick="navigateTo('dashboard')"><i data-lucide="home"></i><span>Inicio</span></button>
       
-      <div class="nav-item nav-parent ${viewState.yearSection ? 'expanded' : ''}" onclick="toggleSubmenu('year-sub')">
-        <i data-lucide="calendar"></i><span>Año</span><i data-lucide="chevron-right" style="width:14px;height:14px"></i>
-      </div>
-      <div id="year-sub" class="nav-submenu ${state.currentSection==='year'?'open':''}">
-        <div class="nav-subitem ${state.currentSubSection==='annual'?'active':''}" onclick="navigateTo('year','annual')">Calendario anual</div>
-        <div class="nav-subitem ${state.currentSubSection==='schoolYear'?'active':''}" onclick="navigateTo('year','schoolYear')">Año escolar</div>
-        <div class="nav-subitem ${state.currentSubSection==='schedule'?'active':''}" onclick="navigateTo('year','schedule')">Horario semanal</div>
-        <div class="nav-subitem ${state.currentSubSection==='objectives'?'active':''}" onclick="navigateTo('year','objectives')">Objetivos del año</div>
+     <div class="nav-item nav-parent" onclick="toggleSubmenu('calendar-sub')">
+  <i data-lucide="calendar-days"></i><span>Calendarios</span>
+  <i data-lucide="chevron-right" style="width:14px;height:14px"></i>
+</div>
+<div id="calendar-sub" class="nav-submenu">
+  <div class="nav-subitem" onclick="navigateTo('calendar','annual')">Vista anual</div>
+  <div class="nav-subitem" onclick="navigateTo('calendar','monthly')">Vista mensual</div>
+  <div class="nav-subitem" onclick="navigateTo('calendar','weekly')">Vista semanal</div>
+  <div class="nav-subitem" onclick="navigateTo('calendar','daily')">Horario diario</div>
+  <div class="nav-subitem ${state.currentSubSection==='objectives'?'active':''}" onclick="navigateTo('year','objectives')">Objetivos del año</div>
       </div>
 
       <button class="nav-item ${state.currentSection==='institutions'?'active':''}" data-section="institutions" onclick="navigateTo('institutions')"><i data-lucide="building-2"></i><span>Instituciones</span></button>
