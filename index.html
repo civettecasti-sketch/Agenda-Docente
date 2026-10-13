@@ -532,35 +532,134 @@ window.saveCurrentCourse = async () => {
 // ============ DASHBOARD ============
 function renderDashboard() {
   const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  // Eventos especiales (NO clases)
+  const specialEvents = state.events
+    .filter(e => e.date && e.type !== 'Clase' && new Date(e.date) >= today)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 6);
+  
+  // Clases de HOY
+  const todayClasses = state.events
+    .filter(e => e.date === todayStr && e.type === 'Clase')
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  
   const totalStudents = state.students.length;
-  const neaeCount = state.students.filter(s => s.neae && s.neae !== 'Sin necesidades específicas').length;
-  const upcomingEvents = state.events.filter(e => e.date && new Date(e.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
   const activeInst = state.institutions.find(i => i.id === state.activeInstitution);
   const totalSubjects = state.institutions.reduce((sum, i) => sum + (i.subjects?.length || 0), 0);
-  let progress = 0;
-  if (activeInst?.startDate && activeInst?.endDate) {
-    const start = new Date(activeInst.startDate), end = new Date(activeInst.endDate);
-    progress = Math.min(100, Math.max(0, ((today - start) / (end - start)) * 100));
-  }
-  return `<div class="section-header"><div><h1>¡Buen día, ${state.user?.displayName?.split(' ')[0] || 'docente'}! 👋</h1><p class="subtitle">${today.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p></div><button class="btn btn-primary" onclick="exportSection('dashboard')"><i data-lucide="download"></i>PDF</button></div>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-icon" style="background:var(--primary-light);color:var(--primary)"><i data-lucide="building-2"></i></div><div><span class="stat-value">${state.institutions.length}</span><span class="stat-label">Instituciones</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--secondary-light);color:var(--secondary)"><i data-lucide="book-open"></i></div><div><span class="stat-value">${totalSubjects}</span><span class="stat-label">Materias</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-light);color:var(--accent)"><i data-lucide="users"></i></div><div><span class="stat-value">${totalStudents}</span><span class="stat-label">Alumnos</span></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:#FEE2E2;color:#DC2626"><i data-lucide="calendar"></i></div><div><span class="stat-value">${state.events.length}</span><span class="stat-label">Eventos</span></div></div>
-  </div>
-  ${activeInst ? `<div class="card"><div class="card-header"><h3><i data-lucide="trending-up"></i> Progreso - ${activeInst.name}</h3><span class="badge">${progress.toFixed(0)}%</span></div><div class="card-body"><div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div></div></div>` : ''}
-  <div class="grid-2">
-    <div class="card"><div class="card-header"><h3><i data-lucide="calendar-days"></i> Próximos eventos</h3></div><div class="card-body">${upcomingEvents.length === 0 ? '<div class="empty-state"><p>Sin eventos</p></div>' : upcomingEvents.map(e => `<div style="border-left:3px solid ${e.color||'var(--primary)'};padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:0.5rem"><strong>${e.title}</strong><br><small>${new Date(e.date).toLocaleDateString('es-ES')} · ${e.type||''}</small></div>`).join('')}</div></div>
-    <div class="card"><div class="card-header"><h3><i data-lucide="zap"></i> Accesos rápidos</h3></div><div class="card-body"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem">
-      <button class="btn btn-secondary" onclick="navigateTo('year')" style="flex-direction:column;padding:1rem"><i data-lucide="calendar"></i><span>Año escolar</span></button>
-      <button class="btn btn-secondary" onclick="navigateTo('students')" style="flex-direction:column;padding:1rem"><i data-lucide="users"></i><span>Alumnado</span></button>
-      <button class="btn btn-secondary" onclick="navigateTo('planning')" style="flex-direction:column;padding:1rem"><i data-lucide="clipboard-list"></i><span>Planeación</span></button>
-      <button class="btn btn-secondary" onclick="navigateTo('evaluation')" style="flex-direction:column;padding:1rem"><i data-lucide="award"></i><span>Evaluación</span></button>
-    </div></div></div>
-  </div>`;
+  
+  return `
+    <div class="section-header">
+      <div>
+        <h1>¡Buen día, ${state.user?.displayName?.split(' ')[0] || 'docente'}! 👋</h1>
+        <p class="subtitle">${today.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      </div>
+    </div>
+    
+    <!-- Stats rápidas -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--primary-light);color:var(--primary)"><i data-lucide="building-2"></i></div>
+        <div><span class="stat-value">${state.institutions.length}</span><span class="stat-label">Instituciones</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--secondary-light);color:var(--secondary)"><i data-lucide="book-open"></i></div>
+        <div><span class="stat-value">${totalSubjects}</span><span class="stat-label">Materias</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--accent-light);color:var(--accent)"><i data-lucide="users"></i></div>
+        <div><span class="stat-value">${totalStudents}</span><span class="stat-label">Alumnos</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#FEE2E2;color:#DC2626"><i data-lucide="calendar"></i></div>
+        <div><span class="stat-value">${todayClasses.length}</span><span class="stat-label">Clases hoy</span></div>
+      </div>
+    </div>
+    
+    <!-- Accesos directos HORIZONTALES -->
+    <div class="card">
+      <div class="card-header"><h3><i data-lucide="zap"></i> Accesos rápidos</h3></div>
+      <div class="card-body">
+        <div class="quick-access-horizontal">
+          <button class="quick-access-btn" onclick="navigateTo('year','annual')">
+            <i data-lucide="calendar"></i><span>Año escolar</span>
+          </button>
+          <button class="quick-access-btn" onclick="navigateTo('students','groups')">
+            <i data-lucide="users"></i><span>Alumnado</span>
+          </button>
+          <button class="quick-access-btn" onclick="navigateTo('planning','daily')">
+            <i data-lucide="clipboard-list"></i><span>Planeación</span>
+          </button>
+          <button class="quick-access-btn" onclick="navigateTo('evaluation','grades')">
+            <i data-lucide="award"></i><span>Evaluación</span>
+          </button>
+          <button class="quick-access-btn" onclick="navigateTo('calendar')">
+            <i data-lucide="calendar-days"></i><span>Calendarios</span>
+          </button>
+          <button class="quick-access-btn" onclick="navigateTo('families')">
+            <i data-lucide="heart"></i><span>Familias</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dos columnas: Clases hoy + Próximos eventos -->
+    <div class="dashboard-grid">
+      <!-- CLASES DE HOY -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="clock"></i> Clases de hoy</h3>
+          <span class="badge">${todayClasses.length} clases</span>
+        </div>
+        <div class="card-body">
+          ${todayClasses.length === 0 ? `
+            <div class="empty-state">
+              <i data-lucide="coffee"></i>
+              <p>No tienes clases programadas para hoy</p>
+            </div>
+          ` : todayClasses.map(e => {
+            const inst = state.institutions.find(i => i.id === e.institutionId);
+            return `
+              <div class="class-today-item" style="border-left:4px solid ${e.color||'var(--primary)'}">
+                <div class="class-today-time">${e.time||'--:--'}</div>
+                <div class="class-today-info">
+                  <strong>${e.subjectName||e.title}</strong>
+                  <span>${e.group||''} ${inst?'· '+inst.name:''}</span>
+                  ${e.classroom?`<span style="font-size:0.75rem;color:var(--text-muted)">📍 ${e.classroom}</span>`:''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      
+      <!-- PRÓXIMOS EVENTOS (solo especiales) -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i data-lucide="star"></i> Próximos eventos</h3>
+          <span class="badge">${specialEvents.length} eventos</span>
+        </div>
+        <div class="card-body">
+          ${specialEvents.length === 0 ? `
+            <div class="empty-state">
+              <i data-lucide="calendar-off"></i>
+              <p>Sin eventos especiales próximos</p>
+            </div>
+          ` : specialEvents.map(e => `
+            <div class="event-item" style="border-left:3px solid ${e.color||'var(--primary)'}">
+              <div class="event-date">${new Date(e.date).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</div>
+              <div class="event-info">
+                <strong>${e.title}</strong>
+                <span>${e.type||'Evento'}${e.institutionName?' · '+e.institutionName:''}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
 }
-
 // ============ AÑO ============
 function renderYear() {
   const subSections = [{ id: 'annual', title: 'Calendario anual', icon: 'calendar' }, { id: 'schoolYear', title: 'Año escolar', icon: 'calendar-range' }, { id: 'importantDates', title: 'Fechas importantes', icon: 'flag' }, { id: 'holidays', title: 'Vacaciones y festivos', icon: 'umbrella' }, { id: 'objectives', title: 'Objetivos del año', icon: 'target' }, { id: 'schedule', title: 'Horario semanal', icon: 'clock' }, { id: 'contacts', title: 'Contactos del centro', icon: 'contact' }, { id: 'substitutions', title: 'Sustituciones', icon: 'user-x' }];
