@@ -1647,35 +1647,84 @@ window.openSubjectModal = (id = null) => {
   const subjects = activeInst?.subjects || [];
   const sub = id ? subjects.find(s => s.id === id) : null;
   const days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-  const schedule = sub?.schedule || [{day:'Lunes',startTime:'08:00',endTime:'09:00'}];
-  const modal = document.createElement('div'); modal.className = 'modal active'; modal.id = 'subjectModal';
-  modal.innerHTML = `<div class="modal-content large"><div class="modal-header"><h2>${id?'Editar':'Nueva'} materia</h2><button class="icon-btn" onclick="closeModal('subjectModal')"><i data-lucide="x"></i></button></div>
-  <form onsubmit="saveSubject(event,'${id||''}')"><div class="section-tabs" style="padding:1rem 1.5rem 0"><button type="button" class="tab-btn active" onclick="switchSubjectFormTab('info',this)">Información</button><button type="button" class="tab-btn" onclick="switchSubjectFormTab('schedule',this)">Horarios</button></div>
-  <div id="sft-info" class="form-tab-content active" style="display:block"><div class="form-grid">
-    <div class="form-group full"><label>Nombre *</label><input type="text" id="sub_name" required value="${sub?.name||''}"></div>
-    <div class="form-group"><label>Institución *</label><select id="sub_institution" required><option value="">Seleccionar</option>${state.institutions.map(i => `<option value="${i.id}" ${i.id===state.activeInstitution?'selected':''}>${i.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Grupo *</label><select id="sub_group" required><option value="">Seleccionar grupo</option>${[...new Set(state.students.map(s => s.group).filter(g => g))].map(g => `<option value="${g}" ${g===sub?.group?'selected':''}>${g}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Aula</label><input type="text" id="sub_classroom" value="${sub?.classroom||''}"></div>
-    <div class="form-group"><label>Color</label><input type="color" id="sub_color" value="${sub?.color||'#4F46E5'}"></div>
-    <div class="form-group"><label>Inicio</label><input type="date" id="sub_startDate" value="${sub?.startDate||''}"></div>
-    <div class="form-group"><label>Fin</label><input type="date" id="sub_endDate" value="${sub?.endDate||''}"></div>
-    <div class="form-group full"><label>Descripción</label><textarea id="sub_description" rows="3">${sub?.description||''}</textarea></div>
-  </div></div>
-  <div id="sft-schedule" class="form-tab-content" style="display:none"><div style="padding:1.5rem">
-    <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Define días y horarios. Se crearán eventos automáticos.</p>
-    <div id="scheduleList">${schedule.map((s,i) => `<div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm)"><select class="sched-day" style="flex:1;padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">${days.map(d => `<option value="${d}" ${s.day===d?'selected':''}>${d}</option>`).join('')}</select><input type="time" class="sched-start" value="${s.startTime||'08:00'}" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)"><input type="time" class="sched-end" value="${s.endTime||'09:00'}" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)"><button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button></div>`).join('')}</div>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="addScheduleRow()"><i data-lucide="plus"></i>Agregar horario</button>
-  </div></div>
-  <div class="modal-footer">${id?`<button type="button" class="btn btn-danger" onclick="deleteSubject('${id}');closeModal('subjectModal')" style="margin-right:auto"><i data-lucide="trash-2"></i></button>`:''}<button type="button" class="btn btn-secondary" onclick="closeModal('subjectModal')">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div></form></div>`;
-  document.body.appendChild(modal); if (typeof lucide !== 'undefined') lucide.createIcons();
+  const schedule = sub?.schedule || [{day:'Lunes',startTime:'08:00',endTime:'09:00',classroom:''}];
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'subjectModal';
+  modal.innerHTML = `
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2>${id?'Editar':'Nueva'} materia</h2>
+        <button class="icon-btn" onclick="closeModal('subjectModal')"><i data-lucide="x"></i></button>
+      </div>
+      <form onsubmit="saveSubject(event,'${id||''}')">
+        <div class="section-tabs" style="padding:1rem 1.5rem 0">
+          <button type="button" class="tab-btn active" onclick="switchSubjectFormTab('info',this)">Información</button>
+          <button type="button" class="tab-btn" onclick="switchSubjectFormTab('schedule',this)">Horarios y Aulas</button>
+        </div>
+        
+        <div id="sft-info" class="form-tab-content active" style="display:block">
+          <div class="form-grid">
+            <div class="form-group full"><label>Nombre *</label><input type="text" id="sub_name" required value="${sub?.name||''}"></div>
+            <div class="form-group"><label>Abreviatura/Clave</label><input type="text" id="sub_code" value="${sub?.code||''}" placeholder="Ej: MAT101, GEO-701"></div>
+            <div class="form-group"><label>Institución *</label><select id="sub_institution" required><option value="">Seleccionar</option>${state.institutions.map(i => `<option value="${i.id}" ${i.id===state.activeInstitution?'selected':''}>${i.name}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Grupo</label><input type="text" id="sub_group" value="${sub?.group||''}"></div>
+            <div class="form-group"><label>Aula principal</label><input type="text" id="sub_classroom" value="${sub?.classroom||''}"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="sub_color" value="${sub?.color||'#4F46E5'}"></div>
+            <div class="form-group"><label>Inicio</label><input type="date" id="sub_startDate" value="${sub?.startDate||''}"></div>
+            <div class="form-group"><label>Fin</label><input type="date" id="sub_endDate" value="${sub?.endDate||''}"></div>
+            <div class="form-group full"><label>Descripción</label><textarea id="sub_description" rows="3">${sub?.description||''}</textarea></div>
+          </div>
+        </div>
+        
+        <div id="sft-schedule" class="form-tab-content" style="display:none">
+          <div style="padding:1.5rem">
+            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Define días, horarios y <strong>aula específica por día</strong> (puede variar).</p>
+            <div id="scheduleList">
+              ${schedule.map((s,i) => `
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;margin-bottom:0.75rem;padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm);align-items:center">
+                  <select class="sched-day" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+                    ${days.map(d => `<option value="${d}" ${s.day===d?'selected':''}>${d}</option>`).join('')}
+                  </select>
+                  <input type="time" class="sched-start" value="${s.startTime||'08:00'}" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+                  <input type="time" class="sched-end" value="${s.endTime||'09:00'}" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+                  <input type="text" class="sched-classroom" value="${s.classroom||''}" placeholder="Aula" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+                  <button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addScheduleRow()"><i data-lucide="plus"></i>Agregar horario</button>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          ${id?`<button type="button" class="btn btn-danger" onclick="deleteSubject('${id}');closeModal('subjectModal')" style="margin-right:auto"><i data-lucide="trash-2"></i></button>`:''}
+          <button type="button" class="btn btn-secondary" onclick="closeModal('subjectModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 };
-
+  
 window.switchSubjectFormTab = (tab, btn) => { document.querySelectorAll('#subjectModal .tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('#subjectModal .form-tab-content').forEach(c => c.style.display = 'none'); btn.classList.add('active'); document.getElementById(`sft-${tab}`).style.display = 'block'; };
 window.addScheduleRow = () => {
   const days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
   const list = document.getElementById('scheduleList');
-  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.75rem;padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm)';
-  row.innerHTML = `<select class="sched-day" style="flex:1;padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">${days.map(d => `<option value="${d}">${d}</option>`).join('')}</select><input type="time" class="sched-start" value="08:00" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)"><input type="time" class="sched-end" value="09:00" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)"><button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button>`;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;margin-bottom:0.75rem;padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm);align-items:center';
+  row.innerHTML = `
+    <select class="sched-day" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+      ${days.map(d => `<option value="${d}">${d}</option>`).join('')}
+    </select>
+    <input type="time" class="sched-start" value="08:00" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+    <input type="time" class="sched-end" value="09:00" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+    <input type="text" class="sched-classroom" value="" placeholder="Aula" style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)">
+    <button type="button" class="icon-btn danger" onclick="this.parentElement.remove()"><i data-lucide="trash-2"></i></button>
+  `;
   list.appendChild(row);
 };
 
@@ -1684,8 +1733,26 @@ window.saveSubject = async (e, id) => {
   const institutionId = document.getElementById('sub_institution').value;
   if (!institutionId) { showNotification('Selecciona institución', 'error'); return; }
   const scheduleRows = document.querySelectorAll('#scheduleList > div');
-  const schedule = Array.from(scheduleRows).map(row => ({ day: row.querySelector('.sched-day').value, startTime: row.querySelector('.sched-start').value, endTime: row.querySelector('.sched-end').value }));
-  const subjectData = { id: id || `sub_${Date.now()}`, name: document.getElementById('sub_name').value, institutionId, group: document.getElementById('sub_group').value, classroom: document.getElementById('sub_classroom').value, color: document.getElementById('sub_color').value, startDate: document.getElementById('sub_startDate').value, endDate: document.getElementById('sub_endDate').value, description: document.getElementById('sub_description').value, schedule, studentCount: id ? (state.institutions.find(i => i.id === institutionId)?.subjects?.find(s => s.id === id)?.studentCount || 0) : 0 };
+  const schedule = Array.from(scheduleRows).map(row => ({
+    day: row.querySelector('.sched-day').value,
+    startTime: row.querySelector('.sched-start').value,
+    endTime: row.querySelector('.sched-end').value,
+    classroom: row.querySelector('.sched-classroom')?.value || ''
+  }));
+  const subjectData = {
+    id: id || `sub_${Date.now()}`,
+    name: document.getElementById('sub_name').value,
+    code: document.getElementById('sub_code').value, // NUEVO
+    institutionId,
+    group: document.getElementById('sub_group').value,
+    classroom: document.getElementById('sub_classroom').value,
+    color: document.getElementById('sub_color').value,
+    startDate: document.getElementById('sub_startDate').value,
+    endDate: document.getElementById('sub_endDate').value,
+    description: document.getElementById('sub_description').value,
+    schedule,
+    studentCount: id ? (state.institutions.find(i => i.id === institutionId)?.subjects?.find(s => s.id === id)?.studentCount || 0) : 0
+  };
   const inst = state.institutions.find(i => i.id === institutionId);
   const subjects = inst?.subjects || [];
   const updatedSubjects = id ? subjects.map(s => s.id === id ? { ...s, ...subjectData } : s) : [...subjects, subjectData];
@@ -1700,17 +1767,35 @@ async function createRecurringEvents(subject, institutionId) {
   const startDate = new Date(subject.startDate), endDate = new Date(subject.endDate);
   const existingEvents = state.events.filter(e => e.subjectId === subject.id);
   for (const evt of existingEvents) await deleteDoc(doc(db, `users/${state.user.uid}/events`, evt.id));
-  const promises = []; const current = new Date(startDate);
+  const promises = [];
+  const current = new Date(startDate);
+  const displayName = subject.code ? `${subject.code} - ${subject.group||''}` : `${subject.name} - ${subject.group||'Grupo'}`;
   while (current <= endDate) {
     const dayName = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][current.getDay()];
     const scheduleForDay = subject.schedule.find(s => s.day === dayName);
     if (scheduleForDay) {
       const dateStr = current.toISOString().split('T')[0];
-      promises.push(addDoc(collection(db, `users/${state.user.uid}/events`), { title: `${subject.name} - ${subject.group||'Grupo'}`, date: dateStr, time: scheduleForDay.startTime, endTime: scheduleForDay.endTime, type: 'Clase', subjectId: subject.id, subjectName: subject.name, institutionId, institutionName: inst?.name || '', color: subject.color || '#4F46E5', createdAt: serverTimestamp() }));
+      promises.push(addDoc(collection(db, `users/${state.user.uid}/events`), {
+        title: displayName,
+        subjectName: subject.name,
+        subjectCode: subject.code || '',
+        group: subject.group || '',
+        classroom: scheduleForDay.classroom || subject.classroom || '',
+        date: dateStr,
+        time: scheduleForDay.startTime,
+        endTime: scheduleForDay.endTime,
+        type: 'Clase',
+        subjectId: subject.id,
+        institutionId,
+        institutionName: inst?.name || '',
+        color: subject.color || '#4F46E5',
+        createdAt: serverTimestamp()
+      }));
     }
     current.setDate(current.getDate() + 1);
   }
   await Promise.all(promises);
+}
 }
 
 window.deleteSubject = async (id) => { if (!confirm('¿Eliminar?')) return; const instId = state.activeInstitution; const inst = state.institutions.find(i => i.id === instId); const updatedSubjects = (inst?.subjects || []).filter(s => s.id !== id); await saveData('institutions', { subjects: updatedSubjects, updatedAt: serverTimestamp() }, instId); };
