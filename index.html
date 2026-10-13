@@ -165,6 +165,89 @@ body{font-family:var(--font-family);background:var(--bg);color:var(--text);line-
 @media(max-width:1024px){.sidebar{width:var(--sidebar-width)}.sidebar.collapsed{width:0;overflow:hidden}.main-content{margin-left:0 !important;padding:1rem;padding-top:4rem}.form-grid{grid-template-columns:1fr}.week-detailed-grid{grid-template-columns:1fr}}
 @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}.month-detailed-grid{grid-template-columns:repeat(7,1fr)}}
 @media print{.sidebar,.btn,.icon-btn,.modal,.notification{display:none!important}.main-content{margin-left:0;padding:0}}
+/* Accesos directos horizontales */
+.quick-access-horizontal {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.quick-access-btn {
+  flex: 1;
+  min-width: 120px;
+  max-width: 180px;
+  padding: 1rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: all 0.2s;
+}
+.quick-access-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+.quick-access-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Clases de hoy */
+.class-today-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+.class-today-time {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--primary);
+  min-width: 60px;
+}
+.class-today-info {
+  flex: 1;
+}
+.class-today-info strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.125rem;
+}
+.class-today-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+/* Responsive dashboard */
+@media (max-width: 768px) {
+  .quick-access-horizontal {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+  }
+  .quick-access-btn {
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
 </style>
 </head>
 <body>
